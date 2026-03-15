@@ -41,3 +41,26 @@ editionProtectedRoutes.get('/editions/:id/my-submissions', async (c) => {
 
   return c.json({ data: rows.map((row) => row.submission), organizationId });
 });
+
+editionProtectedRoutes.get('/editions/:id/my-participation', async (c) => {
+  const organizationId = c.get('organizationId');
+  if (!organizationId) {
+    return c.json({ error: 'x-organization-id is required' }, 400);
+  }
+
+  const editionId = c.req.param('id');
+  const rows = await db
+    .select()
+    .from(participations)
+    .where(
+      and(eq(participations.editionId, editionId), eq(participations.universityId, organizationId)),
+    )
+    .orderBy(asc(participations.createdAt))
+    .limit(1);
+
+  if (!rows[0]) {
+    return c.json({ error: 'Participation not found' }, 404);
+  }
+
+  return c.json({ data: rows[0] });
+});

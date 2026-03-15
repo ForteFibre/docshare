@@ -11,6 +11,7 @@ import { adminUniversityRoutes } from './routes/admin/universities.js';
 import { commentRoutes } from './routes/comments.js';
 import { editionProtectedRoutes } from './routes/edition-protected.js';
 import { editionRoutes } from './routes/editions.js';
+import { meRoutes } from './routes/me.js';
 import { seriesRoutes } from './routes/series.js';
 import { submissionRoutes } from './routes/submissions.js';
 import { universityRoutes } from './routes/university.js';
@@ -57,6 +58,7 @@ export const createApp = (): OpenAPIHono => {
   app.use('/api/*', resolveOrganization);
 
   app.route('/api', editionProtectedRoutes);
+  app.route('/api', meRoutes);
   app.route('/api', submissionRoutes);
   app.route('/api', commentRoutes);
   app.route('/api', uploadRoutes);

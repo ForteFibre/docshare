@@ -16,6 +16,16 @@ const updateSchema = z.object({
 
 export const adminParticipationRoutes = new Hono<{ Variables: AppVariables }>();
 
+adminParticipationRoutes.get('/editions/:id/participations', async (c) => {
+  const editionId = c.req.param('id');
+  const rows = await db
+    .select()
+    .from(participations)
+    .where(eq(participations.editionId, editionId));
+
+  return c.json({ data: rows });
+});
+
 adminParticipationRoutes.post('/editions/:id/participations', async (c) => {
   const editionId = c.req.param('id');
   const body = createSchema.safeParse(await c.req.json());

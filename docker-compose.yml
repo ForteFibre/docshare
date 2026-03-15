@@ -54,7 +54,7 @@ services:
       S3_FORCE_PATH_STYLE: "true"
       BETTER_AUTH_SECRET: change-me
       BETTER_AUTH_URL: http://localhost:8787
-      APP_URL: http://localhost:3000
+      APP_URL: http://frontend:3000
       EMAIL_PROVIDER: console
     depends_on:
       db:
@@ -65,3 +65,17 @@ services:
         condition: service_completed_successfully
     ports:
       - "8787:8787"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    environment:
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: http://backend:8787/api
+      NEXT_PUBLIC_API_ORIGIN: http://backend:8787
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "3000:3000"

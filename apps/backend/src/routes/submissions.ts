@@ -53,6 +53,27 @@ const submissionSchema = z.object({
   updatedAt: z.any(),
 });
 
+const submissionHistorySchema = z.object({
+  id: z.string().uuid(),
+  submissionId: z.string().uuid(),
+  version: z.number().int(),
+  submittedBy: z.string(),
+  fileS3Key: z.string().nullable(),
+  fileName: z.string().nullable(),
+  fileSizeBytes: z.number().nullable(),
+  fileMimeType: z.string().nullable(),
+  url: z.string().nullable(),
+  createdAt: z.any(),
+});
+
+const errorSchema = z.object({ error: z.string() });
+const downloadSchema = z.object({
+  data: z.object({
+    url: z.string().url(),
+    expiresIn: z.number().int().positive(),
+  }),
+});
+
 const createSubmissionRoute = createRoute({
   method: 'post',
   path: '/submissions',
@@ -124,6 +145,194 @@ const listEditionSubmissionsRoute = createRoute({
       content: {
         'application/json': {
           schema: z.object({ error: z.literal('Forbidden') }),
+        },
+      },
+    },
+  },
+});
+
+const updateSubmissionRoute = createRoute({
+  method: 'put',
+  path: '/submissions/{id}',
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+    body: {
+      content: {
+        'application/json': {
+          schema: updateSubmissionSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: '提出更新',
+      content: {
+        'application/json': {
+          schema: z.object({ data: submissionSchema }),
+        },
+      },
+    },
+    400: {
+      description: '不正入力',
+      content: {
+        'application/json': {
+          schema: z.object({ error: z.any() }),
+        },
+      },
+    },
+    404: {
+      description: '提出が存在しない',
+      content: {
+        'application/json': {
+          schema: errorSchema,
+        },
+      },
+    },
+    409: {
+      description: '状態エラー',
+      content: {
+        'application/json': {
+          schema: errorSchema,
+        },
+      },
+    },
+  },
+});
+
+const deleteSubmissionRoute = createRoute({
+  method: 'delete',
+  path: '/submissions/{id}',
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+  },
+  responses: {
+    204: {
+      description: '提出削除',
+    },
+    403: {
+      description: '削除権限なし',
+      content: {
+        'application/json': {
+          schema: z.object({ error: z.literal('Forbidden') }),
+        },
+      },
+    },
+  },
+});
+
+const getSubmissionDownloadRoute = createRoute({
+  method: 'get',
+  path: '/submissions/{id}/download',
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+  },
+  responses: {
+    200: {
+      description: '現行提出ファイルのダウンロードURL',
+      content: {
+        'application/json': {
+          schema: downloadSchema,
+        },
+      },
+    },
+    400: {
+      description: 'ファイル提出ではない',
+      content: {
+        'application/json': {
+          schema: errorSchema,
+        },
+      },
+    },
+    403: {
+      description: '閲覧権限なし',
+      content: {
+        'application/json': {
+          schema: errorSchema,
+        },
+      },
+    },
+    404: {
+      description: '提出が存在しない',
+      content: {
+        'application/json': {
+          schema: errorSchema,
+        },
+      },
+    },
+  },
+});
+
+const getSubmissionHistoryRoute = createRoute({
+  method: 'get',
+  path: '/submissions/{id}/history',
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+  },
+  responses: {
+    200: {
+      description: '提出履歴一覧',
+      content: {
+        'application/json': {
+          schema: z.object({ data: z.array(submissionHistorySchema) }),
+        },
+      },
+    },
+    403: {
+      description: '閲覧権限なし',
+      content: {
+        'application/json': {
+          schema: errorSchema,
+        },
+      },
+    },
+    404: {
+      description: '提出が存在しない',
+      content: {
+        'application/json': {
+          schema: errorSchema,
+        },
+      },
+    },
+  },
+});
+
+const getSubmissionHistoryDownloadRoute = createRoute({
+  method: 'get',
+  path: '/submission-history/{historyId}/download',
+  request: {
+    params: z.object({ historyId: z.string().uuid() }),
+  },
+  responses: {
+    200: {
+      description: '提出履歴ファイルのダウンロードURL',
+      content: {
+        'application/json': {
+          schema: downloadSchema,
+        },
+      },
+    },
+    400: {
+      description: 'ファイル履歴ではない',
+      content: {
+        'application/json': {
+          schema: errorSchema,
+        },
+      },
+    },
+    403: {
+      description: '閲覧権限なし',
+      content: {
+        'application/json': {
+          schema: errorSchema,
+        },
+      },
+    },
+    404: {
+      description: '履歴が存在しない',
+      content: {
+        'application/json': {
+          schema: errorSchema,
         },
       },
     },
@@ -233,7 +442,7 @@ submissionRoutes.openapi(createSubmissionRoute, async (c) => {
   return c.json({ data: inserted[0] }, 201);
 });
 
-submissionRoutes.put('/submissions/:id', async (c) => {
+submissionRoutes.openapi(updateSubmissionRoute, async (c) => {
   const user = c.get('currentUser');
   const submissionId = c.req.param('id');
   const body = updateSubmissionSchema.safeParse(await c.req.json());
@@ -307,10 +516,10 @@ submissionRoutes.put('/submissions/:id', async (c) => {
     return next[0];
   });
 
-  return c.json({ data: updated });
+  return c.json({ data: updated }, 200);
 });
 
-submissionRoutes.delete('/submissions/:id', async (c) => {
+submissionRoutes.openapi(deleteSubmissionRoute, async (c) => {
   const user = c.get('currentUser');
   const submissionId = c.req.param('id');
 
@@ -327,7 +536,7 @@ submissionRoutes.openapi(listEditionSubmissionsRoute, async (c) => {
   const user = c.get('currentUser');
   const editionId = c.req.param('id');
 
-  const canView = await canViewOtherSubmissions(user.id, editionId);
+  const canView = await canViewOtherSubmissions(user.id, editionId, c.get('organizationId'));
   if (!canView) {
     return c.json({ error: 'Forbidden' as const }, 403);
   }
@@ -343,7 +552,7 @@ submissionRoutes.openapi(listEditionSubmissionsRoute, async (c) => {
   return c.json({ data: rows }, 200);
 });
 
-submissionRoutes.get('/submissions/:id/download', async (c) => {
+submissionRoutes.openapi(getSubmissionDownloadRoute, async (c) => {
   const user = c.get('currentUser');
   const submissionId = c.req.param('id');
 
@@ -381,10 +590,10 @@ submissionRoutes.get('/submissions/:id/download', async (c) => {
     process.env.S3_BUCKET_SUBMISSIONS ?? 'robocon-submissions',
     row[0].submission.fileS3Key,
   );
-  return c.json({ data: download });
+  return c.json({ data: { url: download.presignedUrl, expiresIn: download.expiresIn } }, 200);
 });
 
-submissionRoutes.get('/submissions/:id/history', async (c) => {
+submissionRoutes.openapi(getSubmissionHistoryRoute, async (c) => {
   const user = c.get('currentUser');
   const submissionId = c.req.param('id');
 
@@ -412,10 +621,10 @@ submissionRoutes.get('/submissions/:id/history', async (c) => {
     .where(eq(submissionHistories.submissionId, submissionId))
     .orderBy(desc(submissionHistories.version));
 
-  return c.json({ data: histories });
+  return c.json({ data: histories }, 200);
 });
 
-submissionRoutes.get('/submission-history/:historyId/download', async (c) => {
+submissionRoutes.openapi(getSubmissionHistoryDownloadRoute, async (c) => {
   const user = c.get('currentUser');
   const historyId = c.req.param('historyId');
 
@@ -450,5 +659,5 @@ submissionRoutes.get('/submission-history/:historyId/download', async (c) => {
     process.env.S3_BUCKET_SUBMISSIONS ?? 'robocon-submissions',
     row[0].history.fileS3Key,
   );
-  return c.json({ data: download });
+  return c.json({ data: { url: download.presignedUrl, expiresIn: download.expiresIn } }, 200);
 });

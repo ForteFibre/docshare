@@ -44,6 +44,7 @@ export const hasAnySubmission = async (
 export const canViewOtherSubmissions = async (
   userId: string,
   editionId: string,
+  organizationIdHeader: string | null,
 ): Promise<boolean> => {
   if (await isAdmin(userId)) {
     return true;
@@ -65,7 +66,17 @@ export const canViewOtherSubmissions = async (
     return false;
   }
 
-  for (const universityId of universityIds) {
+  const targetUniversityIds = organizationIdHeader
+    ? universityIds.includes(organizationIdHeader)
+      ? [organizationIdHeader]
+      : []
+    : universityIds;
+
+  if (targetUniversityIds.length === 0) {
+    return false;
+  }
+
+  for (const universityId of targetUniversityIds) {
     if (await hasAnySubmission(universityId, editionId)) {
       return true;
     }
@@ -106,7 +117,7 @@ export const canViewParticipation = async (
     return false;
   }
 
-  return canViewOtherSubmissions(userId, participation.editionId);
+  return canViewOtherSubmissions(userId, participation.editionId, organizationIdHeader);
 };
 
 export const canComment = async (

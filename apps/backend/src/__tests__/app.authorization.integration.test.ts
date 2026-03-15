@@ -9,6 +9,10 @@ const statusEditionIds = {
   closed: '00000000-0000-0000-0000-000000000004',
 } as const;
 
+const submissionIds = {
+  sample: '10000000-0000-0000-0000-000000000001',
+} as const;
+
 const mockDeleteWhere = vi.fn(async () => undefined);
 const mockEditionSubmissionRows = vi.fn(async () => []);
 
@@ -130,19 +134,19 @@ describe('authorization integration (app.request)', () => {
   it('submission delete permission matrix: admin/owner/member', async () => {
     const app = createApp();
 
-    const adminRes = await app.request('/api/submissions/sub-1', {
+    const adminRes = await app.request(`/api/submissions/${submissionIds.sample}`, {
       method: 'DELETE',
       headers: { 'x-role': 'admin', 'x-organization-id': 'org-1' },
     });
     expect(adminRes.status).toBe(204);
 
-    const ownerRes = await app.request('/api/submissions/sub-1', {
+    const ownerRes = await app.request(`/api/submissions/${submissionIds.sample}`, {
       method: 'DELETE',
       headers: { 'x-role': 'owner', 'x-organization-id': 'org-1' },
     });
     expect(ownerRes.status).toBe(204);
 
-    const memberRes = await app.request('/api/submissions/sub-1', {
+    const memberRes = await app.request(`/api/submissions/${submissionIds.sample}`, {
       method: 'DELETE',
       headers: { 'x-role': 'member', 'x-organization-id': 'org-1' },
     });
@@ -185,6 +189,10 @@ describe('authorization integration (app.request)', () => {
 
     expect(json.paths['/api/series']).toBeDefined();
     expect(json.paths['/api/submissions']).toBeDefined();
+    expect(json.paths['/api/submissions/{id}']).toBeDefined();
+    expect(json.paths['/api/submissions/{id}/download']).toBeDefined();
+    expect(json.paths['/api/submissions/{id}/history']).toBeDefined();
+    expect(json.paths['/api/submission-history/{historyId}/download']).toBeDefined();
     expect(json.paths['/api/editions/{id}/submissions']).toBeDefined();
     expect(json.paths['/api/participations/{id}/comments']).toBeDefined();
     expect(json.paths['/api/university/members']).toBeDefined();
