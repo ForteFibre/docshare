@@ -21,8 +21,8 @@ model: "GPT-5.3-Codex"
 2. 必要に応じリモート レポジトリと同期する
 3. 現在のローカル レポジトリ状況を確認する
 4. 現在の GitHub Issues の状況を確認する
-5. #tool:ms-vscode.vscode-websearchforcopilot/websearch でウェブ検索を行い、要件の理解を深める
-6. 要件と調査結果に基づき、Issue を作成/更新する
+5. #tool:ms-vscode.vscode-websearchforcopilot/websearch でウェブ検索を行い、要件および要件に必要な周辺知識の理解を深める
+6. 要件と調査結果に基づき、十分な情報を含めたIssue を作成/更新する
 7. 作成された Issue に対して批判的にレビューを行う
 8. レビュー内容に基づき、Issue を改善する
 9. ユーザーに作成した Issue を報告する
