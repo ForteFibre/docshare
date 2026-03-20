@@ -1,6 +1,6 @@
 # ロボコン情報共有サービス フロントエンド仕様書
 
-**バージョン:** 0.1.0  
+**バージョン:** 0.5.0  
 **元仕様:** `spec.md` v0.3.0（2026-03-15 時点）  
 **対象範囲:** Next.js フロントエンドの画面仕様、画面遷移、UI 状態、クライアント側バリデーション、API 依存
 
@@ -31,6 +31,7 @@
 - 認証済み画面では「現在の大学コンテキスト」を持つ
 - 大学コンテキストが必要な API 呼び出しでは `X-Organization-Id` ヘッダーを付与する
 - 現在の大学コンテキストはヘッダーの大学切り替え UI から変更できる
+- 初期セッション取得には `GET /api/me` を利用し、所属大学一覧と `activeOrganizationId` を復元する
 
 ### 2.3 ロール
 
@@ -91,7 +92,7 @@
 |------|------|-----------|
 | トップページ | `/` | サービス概要、利用の流れ、ログイン導線 |
 | 大会シリーズ一覧 | `/competitions` | 大会シリーズの検索・一覧 |
-| 大会回詳細 | `/competitions/:seriesSlug/:year` | 大会回の説明、ルール資料、外部リンク |
+| 大会回詳細 | `/competitions/:editionId` | 大会回の説明、ルール資料、外部リンク |
 | ログイン | `/auth/login` | Better Auth を使ったログイン |
 | アカウント作成 | `/auth/register` | Better Auth を使った新規登録 |
 | 招待承認 | `/invite/:invitationId` | 招待内容の確認、承認、ログイン/新規登録導線 |
@@ -136,12 +137,13 @@
 - 検索キーワード `q` を指定できる
 - ページング・ソートに対応する
 - 各行から大会シリーズ詳細または配下の大会回へ遷移できる
+- 大会回詳細への遷移は `editionId` ベースで行う
 
 使用 API:
 - `GET /api/series`
 - 必要に応じて `GET /api/editions?series_id=...`
 
-### 5.3 大会回詳細 `/competitions/:seriesSlug/:year`
+### 5.3 大会回詳細 `/competitions/:editionId`
 
 - 大会回名、説明、共有状態、外部リンクを表示する
 - ルール資料があれば表示する
@@ -149,15 +151,20 @@
 - 認証済みの場合は、権限に応じて「資料提出」「資料一覧」への導線を表示する
 
 必要な表示項目:
-- シリーズ名
+- 大会シリーズ名
 - 開催年
 - 大会回説明
 - ルール資料一覧
 - 外部リンク
 - 共有状態
 
+使用 API:
+- `GET /api/editions/:id`
+- 必要に応じて `GET /api/series/:id`
+
 ### 5.4 ダッシュボード `/dashboard`
 
+- `GET /api/me` でユーザー情報・所属大学一覧・現在の大学コンテキストを初期化する
 - 現在の大学コンテキストに紐づく大会回一覧を表示する
 - 各大会回について以下を確認できる
   - 提出状況
@@ -168,6 +175,8 @@
 
 ### 5.5 大会回 資料提出 `/editions/:id/submit`
 
+- `GET /api/editions/:id/my-submission-status` を主データソースとして利用する
+- 自校の参加チーム一覧を取得し、複数チーム時はチーム切り替え UI を表示する
 - 自校の提出対象テンプレート一覧を表示する
 - テンプレートごとに以下を表示する
   - 名称
@@ -213,7 +222,9 @@
 
 使用 API:
 - `GET /api/editions/:id/templates`
-- `GET /api/editions/:id/my-submissions`
+- `GET /api/editions/:id/my-participations`
+- `GET /api/editions/:id/my-submission-status`
+- 必要に応じて `GET /api/editions/:id/my-submissions`
 - `POST /api/upload/presign`
 - `POST /api/submissions`
 - `PUT /api/submissions/:id`
@@ -255,6 +266,7 @@
 - 各コメントに以下を表示する
   - 投稿者名
   - 投稿者所属大学名
+  - 投稿者チーム名（大会内で一意に定まる場合のみ）
   - 投稿日時
   - 更新日時
   - Markdown レンダリング結果
@@ -262,12 +274,16 @@
 - `admin` は他人のコメントにも削除操作を表示する
 
 使用 API:
+- `GET /api/participations/:id`
+- `GET /api/participations/:id/submissions`
 - `GET /api/participations/:id/comments`
 - `POST /api/participations/:id/comments`
 - `PUT /api/comments/:id`
 - `DELETE /api/comments/:id`
 - `GET /api/submissions/:id/download`
 - `GET /api/submissions/:id/history`
+
+`GET /api/participations/:id/comments` では、コメント作成時点の所属大学名と、必要に応じてチーム名のスナップショットを表示に利用する。
 
 ### 5.8 資料履歴 `/editions/:id/submissions/:submissionId/history`
 
@@ -282,6 +298,8 @@
 使用 API:
 - `GET /api/submissions/:id/history`
 - `GET /api/submission-history/:historyId/download`
+
+`GET /api/submissions/:id/history` では `submittedByUser.name` を更新者表示に利用する。
 
 ### 5.9 大学設定 `/university/settings`
 
@@ -340,6 +358,7 @@
 - `POST /api/admin/editions/:id/participations`
 - `PUT /api/admin/participations/:id`
 - `DELETE /api/admin/participations/:id`
+- `GET /api/admin/editions/:id/participations`
 - 参照用に `GET /api/admin/universities`
 
 #### 資料種別テンプレート管理 `/admin/editions/:id/templates`
@@ -375,6 +394,7 @@
 - Better Auth の認証 API を呼ぶ
 - メール/パスワード認証を基本とする
 - Google OAuth が有効なら追加導線を表示する
+- 認証後は `GET /api/me` を取得し、所属大学と active organization を初期化する
 - 認証後は以下の優先順で遷移する
   - 招待承認フロー中なら招待画面に戻る
   - 認証済みで大学所属があれば `/dashboard`
@@ -404,6 +424,7 @@
 - `NEXT_PUBLIC_API_URL` を API ベース URL とする
 - Cookie ベース認証を前提とし、必要に応じて認証情報を送信する
 - `X-Organization-Id` が必要なエンドポイントでは、選択中大学 ID を必ず付与する
+- セッションと所属大学一覧の初期取得には `GET /api/me` を使う
 - OpenAPI から型生成する前提を推奨する
 
 ### 7.2 一覧取得
@@ -472,13 +493,7 @@
 
 以下は、`spec.md` と現行バックエンド実装を確認したうえで、フロントエンド仕様として不足・矛盾・未確定と判断した項目である。
 
-### 10.1 ルーティングと公開 API の不整合
-
-- 公開画面の大会回詳細パスは `/competitions/:seriesSlug/:year` だが、公開 API は `GET /api/editions/:id` と `GET /api/series/:id` しかなく、`slug + year` から大会回を直接引く API がない
-- フロントは現状、シリーズ一覧と大会回一覧を総当たりして解決する必要があり非効率である
-- `seriesSlug` を使うルーティングを維持するなら、`GET /api/series/by-slug/:slug` や `GET /api/competitions/:seriesSlug/:year` のような公開 API が必要である
-
-### 10.2 ダッシュボード要件が未定義
+### 10.1 ダッシュボード要件が未定義
 
 - `spec.md` では「所属大学の大会一覧、最近の更新」とあるが、必要な API と表示定義がない
 - 現行バックエンドにもダッシュボード専用 API は存在しない
@@ -488,69 +503,20 @@
   - 並び順
   - 0 件時の表示
 
-### 10.3 自校が複数チーム出場している場合の提出 UI が不足
-
-- データモデル上は同一大学が複数 `participation` を持てる
-- しかし `GET /api/editions/:id/my-submissions` は submission 一覧のみを返し、参加チーム一覧や template ごとの未提出状態を返さない
-- フロントは「どのチームに対して提出するか」を選ぶ必要があるが、そのための読み取り API が不足している
-- 最低でも以下のいずれかが必要である
-  - `GET /api/editions/:id/my-participations`
-  - `GET /api/editions/:id/my-submissions` が participation 情報と template 情報を含む
-
-### 10.4 チーム詳細画面に必要な読み取り API が不足
-
-- 画面 `/editions/:id/teams/:participationId` には「チーム基本情報」と「対象チームの提出資料一覧」が必要
-- しかし現行 API は participation 単体取得 API や participation 単位の submission 一覧 API を持たない
-- `GET /api/editions/:id/submissions` だけでは一覧から個別チーム画面を安定して構築しづらい
-- 追加候補:
-  - `GET /api/participations/:id`
-  - `GET /api/participations/:id/submissions`
-
-### 10.5 資料履歴画面の表示情報が不足
-
-- `GET /api/submissions/:id/history` は `submittedBy` のユーザー ID を返すが、画面モックでは更新者名を表示している
-- ユーザー表示名を得る API がないため、現状のフロント仕様では更新者名表示を確定できない
-- 履歴 API に `submittedByName` を含めるか、ユーザー参照 API が必要である
-
-### 10.6 コメント投稿者の所属大学名の定義が曖昧
-
-- ユーザーは複数大学所属可能だが、コメント API は投稿者の「最も古い所属大学」を返す実装になっている
-- これは「コメント投稿時点でどの大学コンテキストから投稿したか」と一致しない可能性がある
-- フロント表示としては「投稿時のアクティブ大学名」を表示したいはずであり、仕様と実装の再定義が必要である
-
-### 10.7 ルール資料のダウンロード仕様が不足
+### 10.2 ルール資料のダウンロード仕様が不足
 
 - 公開画面ではルール資料を表示する要件がある
 - ただし `rule_documents` は `s3_key` と `mime_type` のみで、公開ダウンロード URL の取得方法が仕様化されていない
 - 現行バックエンドにも公開ルール資料ダウンロード API はない
 - そのためフロントはルール資料を「表示」できても「実際に開く」手段が未定である
 
-### 10.8 大学設定画面の API と実装が不一致
-
-- 元仕様には `PUT /api/university/members/:id/role` と `DELETE /api/university/members/:id` がある
-- しかし現行バックエンド実装には該当ルートが存在しない
-- フロントエンドは現時点ではメンバー一覧と招待までしか確実に実装できない
-
-### 10.9 管理画面の一覧 API が不足している箇所がある
-
-- 出場登録管理には「既存の出場登録一覧」が必要だが、現行バックエンドには管理用 participation 一覧 API がない
-- テンプレート管理では `GET /api/editions/:id/templates` を流用できるが、出場登録管理は作成・更新・削除のみで一覧取得がない
-- フロント仕様としては `GET /api/admin/editions/:id/participations` が必要である
-
-### 10.10 招待承認画面の API が不足
+### 10.3 招待承認画面の API が不足
 
 - 画面 `/invite/:invitationId` には招待内容取得と承認操作が必要
 - しかし `spec.md` では Better Auth に委譲されており、フロントから何を呼ぶかが明記されていない
 - Better Auth の組織招待 API をそのまま使うのか、BFF でラップするのかを確定する必要がある
 
-### 10.11 認証セッション取得方法が未定義
-
-- フロントでログイン状態、所属大学一覧、admin 判定をどう取得するかが仕様にない
-- 画面のガードやヘッダー描画に必須であるため、以下の少なくとも一つが必要
-  - Better Auth のセッション取得エンドポイント利用方針
-  - セッション + 所属大学一覧を返すフロント専用 API
-
-### 10.12 空状態と誘導文が未定義
+### 10.4 空状態と誘導文が未定義
 
 - 閲覧不可時に何を表示するかの文言方針が未確定
 - 特に以下は UX 上重要である
@@ -563,16 +529,13 @@
 
 ## 11. フロントエンド実装開始前に確定したい項目
 
-1. 大会回詳細を `seriesSlug + year` で引く API を追加するか、フロントの URL 設計を `editionId` ベースへ変更するか
-2. 複数チーム所属時の提出 UI をどう構成するか
-3. チーム詳細画面用の participation 読み取り API を追加するか
-4. ダッシュボードの情報源と優先度をどう定義するか
-5. 大学設定のロール変更・削除 API をこのまま実装するか、初期版では未提供にするか
-6. 招待承認フローを Better Auth 素の UI/SDK で組むか、独自画面でラップするか
+1. ダッシュボードの情報源と優先度をどう定義するか
+2. 招待承認フローを Better Auth 素の UI/SDK で組むか、独自画面でラップするか
+3. 公開ルール資料のダウンロード方法をどう提供するか
 
 ---
 
 ## 12. 現時点での結論
 
-`spec.md` からフロントエンド単体の仕様は概ね切り出せるが、実装に着手するには「公開大会詳細の取得方法」「複数チーム時の提出導線」「チーム詳細表示用 API」「ダッシュボード要件」の 4 点が特に不足している。  
-この 4 点を先に確定すると、画面設計・API クライアント設計・状態管理のブレが大きく減る。
+追加された `GET /api/me`、`GET /api/editions/:id/my-participations`、`GET /api/editions/:id/my-submission-status`、`GET /api/participations/:id`、`GET /api/participations/:id/submissions`、大学設定 API、管理用 participation 一覧 API により、認証済み主要画面の実装前提はかなり揃った。  
+現時点で特に残っている論点は「ダッシュボード要件」「招待承認フロー」「公開ルール資料ダウンロード」の 3 点である。
