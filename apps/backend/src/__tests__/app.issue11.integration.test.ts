@@ -125,6 +125,14 @@ vi.mock('../middleware/admin.js', () => ({
 
 const mockCanViewParticipation = vi.fn(async () => true);
 const mockCanViewOtherSubmissions = vi.fn(async () => true);
+const mockGetObjectMetadata = vi.fn(async () => ({
+  contentLength: 1024,
+  contentType: 'application/pdf',
+}));
+const mockPresignDownload = vi.fn(async (_bucket: string, key: string) => ({
+  presignedUrl: `https://files.example.test/${key}`,
+  expiresIn: 300,
+}));
 
 vi.mock('../services/permissions.js', () => ({
   canDeleteSubmission: vi.fn(async () => true),
@@ -137,12 +145,26 @@ vi.mock('../services/permissions.js', () => ({
   isAdmin: vi.fn(async (userId: string) => userId === 'admin-user'),
 }));
 
+vi.mock('../services/storage.js', () => ({
+  buildRuleKey: vi.fn(),
+  buildVersionedSubmissionKey: vi.fn(),
+  getObjectMetadata: mockGetObjectMetadata,
+  matchesVersionedSubmissionKey: vi.fn(),
+  presignDownload: mockPresignDownload,
+  presignUpload: vi.fn(),
+  presignUploadByKey: vi.fn(),
+}));
+
 const { createApp } = await import('../app.js');
 
 describe('issue #11 api integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     dbQueue.length = 0;
+    mockGetObjectMetadata.mockResolvedValue({
+      contentLength: 1024,
+      contentType: 'application/pdf',
+    });
   });
 
   it('GET /api/me returns current user profile', async () => {
@@ -553,6 +575,51 @@ describe('issue #11 api integration', () => {
       name: 'Alice',
       universityName: 'Org One',
       teamName: 'Team A',
+    });
+  });
+
+  it('POST /api/submissions rejects s3Key outside the submission context', async () => {
+    const app = createApp();
+
+    enqueueDb(
+      [{ id: '10000000-0000-0000-0000-000000000001' }],
+      [
+        {
+          template: {
+            id: '20000000-0000-0000-0000-000000000001',
+            editionId: '30000000-0000-0000-0000-000000000001',
+            acceptType: 'file',
+            allowedExtensions: ['pdf'],
+            maxFileSizeMb: 5,
+            urlPattern: null,
+          },
+          edition: {
+            id: '30000000-0000-0000-0000-000000000001',
+            sharingStatus: 'accepting',
+          },
+          participationId: '10000000-0000-0000-0000-000000000001',
+        },
+      ],
+      [],
+    );
+
+    const res = await app.request('/api/submissions', {
+      method: 'POST',
+      headers: { 'x-role': 'member', 'x-organization-id': 'org-1' },
+      body: JSON.stringify({
+        templateId: '20000000-0000-0000-0000-000000000001',
+        participationId: '10000000-0000-0000-0000-000000000001',
+        s3Key:
+          'submissions/30000000-0000-0000-0000-000000000001/another-participation/20000000-0000-0000-0000-000000000001/v1_123e4567-e89b-12d3-a456-426614174000_concept.pdf',
+        fileName: 'concept.pdf',
+        fileSizeBytes: 1024,
+        mimeType: 'application/pdf',
+      }),
+    });
+
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({
+      error: 's3Key is invalid for this submission context',
     });
   });
 

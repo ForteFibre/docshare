@@ -21,6 +21,11 @@ export const editionProtectedRoutes = new OpenAPIHono<{
   Variables: AppVariables;
 }>();
 
+const toPublicSubmission = (submission: typeof submissions.$inferSelect) => {
+  const { fileS3Key: _fileS3Key, ...publicSubmission } = submission;
+  return publicSubmission;
+};
+
 const templateSchema = z.object({
   id: z.string().uuid(),
   editionId: z.string().uuid(),
@@ -41,7 +46,6 @@ const mySubmissionSchema = z.object({
   participationId: z.string().uuid(),
   submittedBy: z.string(),
   version: z.number().int(),
-  fileS3Key: z.string().nullable(),
   fileName: z.string().nullable(),
   fileSizeBytes: z.number().nullable(),
   fileMimeType: z.string().nullable(),
@@ -387,7 +391,7 @@ editionProtectedRoutes.openapi(listMySubmissionsRoute, async (c) => {
 
   return c.json(
     {
-      data: pagedRows.map((row) => row.submission),
+      data: pagedRows.map((row) => toPublicSubmission(row.submission)),
       organizationId,
       pagination: createPaginationMeta({
         page: parsed.value.page,
