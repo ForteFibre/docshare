@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../../db/index.js';
 import { competitionEditions } from '../../db/schema.js';
 import { env } from '../../lib/config.js';
+import { editionResponseSchema, toEditionResponse } from '../../lib/edition-response.js';
 import type { AppVariables } from '../../middleware/auth.js';
 import { presignUpload } from '../../services/storage.js';
 
@@ -34,27 +35,6 @@ const ruleUpdateSchema = z.object({
   ),
 });
 
-const editionSchema = z.object({
-  id: z.string().uuid(),
-  seriesId: z.string().uuid(),
-  year: z.number().int(),
-  name: z.string(),
-  description: z.string().nullable(),
-  ruleDocuments: z
-    .array(
-      z.object({
-        label: z.string(),
-        s3_key: z.string(),
-        mime_type: z.string(),
-      }),
-    )
-    .nullable(),
-  sharingStatus: z.enum(['draft', 'accepting', 'sharing', 'closed']),
-  externalLinks: z.array(z.object({ label: z.string(), url: z.string().url() })).nullable(),
-  createdAt: z.any(),
-  updatedAt: z.any(),
-});
-
 const createEditionRoute = createRoute({
   method: 'post',
   path: '/editions',
@@ -72,7 +52,7 @@ const createEditionRoute = createRoute({
       description: '大会開催回作成',
       content: {
         'application/json': {
-          schema: z.object({ data: editionSchema }),
+          schema: z.object({ data: editionResponseSchema }),
         },
       },
     },
@@ -105,7 +85,141 @@ const updateSharingStatusRoute = createRoute({
       description: 'sharing_status更新',
       content: {
         'application/json': {
-          schema: z.object({ data: editionSchema }),
+          schema: z.object({ data: editionResponseSchema }),
+        },
+      },
+    },
+    400: {
+      description: '不正入力',
+      content: {
+        'application/json': {
+          schema: z.object({ error: z.any() }),
+        },
+      },
+    },
+    404: {
+      description: '未検出',
+      content: {
+        'application/json': {
+          schema: z.object({ error: z.literal('Not found') }),
+        },
+      },
+    },
+  },
+});
+
+const updateEditionRoute = createRoute({
+  method: 'put',
+  path: '/editions/{id}',
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+    body: {
+      content: {
+        'application/json': {
+          schema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: '大会開催回更新',
+      content: {
+        'application/json': {
+          schema: z.object({ data: editionResponseSchema }),
+        },
+      },
+    },
+    400: {
+      description: '不正入力',
+      content: {
+        'application/json': {
+          schema: z.object({ error: z.any() }),
+        },
+      },
+    },
+    404: {
+      description: '未検出',
+      content: {
+        'application/json': {
+          schema: z.object({ error: z.literal('Not found') }),
+        },
+      },
+    },
+  },
+});
+
+const deleteEditionRoute = createRoute({
+  method: 'delete',
+  path: '/editions/{id}',
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+  },
+  responses: {
+    204: {
+      description: '大会開催回削除',
+    },
+  },
+});
+
+const rulePresignResponseSchema = z.object({
+  presignedUrl: z.string().url(),
+  s3Key: z.string(),
+  expiresIn: z.number().int(),
+});
+
+const presignRuleUploadRoute = createRoute({
+  method: 'post',
+  path: '/editions/{id}/rules/presign',
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+    body: {
+      content: {
+        'application/json': {
+          schema: rulePresignSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'ルール資料アップロード署名URL発行',
+      content: {
+        'application/json': {
+          schema: z.object({ data: rulePresignResponseSchema }),
+        },
+      },
+    },
+    400: {
+      description: '不正入力',
+      content: {
+        'application/json': {
+          schema: z.object({ error: z.any() }),
+        },
+      },
+    },
+  },
+});
+
+const updateRulesRoute = createRoute({
+  method: 'put',
+  path: '/editions/{id}/rules',
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+    body: {
+      content: {
+        'application/json': {
+          schema: ruleUpdateSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'ルール資料更新',
+      content: {
+        'application/json': {
+          schema: z.object({ data: editionResponseSchema }),
         },
       },
     },
@@ -150,10 +264,10 @@ adminEditionRoutes.openapi(createEditionRoute, async (c) => {
     })
     .returning();
 
-  return c.json({ data: inserted[0] }, 201);
+  return c.json({ data: await toEditionResponse(inserted[0]) }, 201);
 });
 
-adminEditionRoutes.put('/editions/:id', async (c) => {
+adminEditionRoutes.openapi(updateEditionRoute, async (c) => {
   const body = schema.safeParse(await c.req.json());
   if (!body.success) {
     return c.json({ error: body.error.flatten() }, 400);
@@ -174,13 +288,13 @@ adminEditionRoutes.put('/editions/:id', async (c) => {
     .returning();
 
   if (!updated[0]) {
-    return c.json({ error: 'Not found' }, 404);
+    return c.json({ error: 'Not found' as const }, 404);
   }
 
-  return c.json({ data: updated[0] });
+  return c.json({ data: await toEditionResponse(updated[0]) }, 200);
 });
 
-adminEditionRoutes.delete('/editions/:id', async (c) => {
+adminEditionRoutes.openapi(deleteEditionRoute, async (c) => {
   await db.delete(competitionEditions).where(eq(competitionEditions.id, c.req.param('id')));
   return c.body(null, 204);
 });
@@ -201,10 +315,10 @@ adminEditionRoutes.openapi(updateSharingStatusRoute, async (c) => {
     return c.json({ error: 'Not found' as const }, 404);
   }
 
-  return c.json({ data: updated[0] }, 200);
+  return c.json({ data: await toEditionResponse(updated[0]) }, 200);
 });
 
-adminEditionRoutes.post('/editions/:id/rules/presign', async (c) => {
+adminEditionRoutes.openapi(presignRuleUploadRoute, async (c) => {
   const editionId = c.req.param('id');
   const body = rulePresignSchema.safeParse(await c.req.json());
   if (!body.success) {
@@ -218,10 +332,10 @@ adminEditionRoutes.post('/editions/:id/rules/presign', async (c) => {
     contentType: body.data.contentType,
   });
 
-  return c.json({ data: result });
+  return c.json({ data: result }, 200);
 });
 
-adminEditionRoutes.put('/editions/:id/rules', async (c) => {
+adminEditionRoutes.openapi(updateRulesRoute, async (c) => {
   const editionId = c.req.param('id');
   const body = ruleUpdateSchema.safeParse(await c.req.json());
   if (!body.success) {
@@ -235,8 +349,8 @@ adminEditionRoutes.put('/editions/:id/rules', async (c) => {
     .returning();
 
   if (!updated[0]) {
-    return c.json({ error: 'Not found' }, 404);
+    return c.json({ error: 'Not found' as const }, 404);
   }
 
-  return c.json({ data: updated[0] });
+  return c.json({ data: await toEditionResponse(updated[0]) }, 200);
 });

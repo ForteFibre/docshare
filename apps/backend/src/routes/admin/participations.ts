@@ -1,8 +1,7 @@
-import { eq } from 'drizzle-orm';
-import { Hono } from 'hono';
-import { z } from 'zod';
+import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
+import { asc, eq } from 'drizzle-orm';
 import { db } from '../../db/index.js';
-import { participations } from '../../db/schema.js';
+import { organizations, participations } from '../../db/schema.js';
 import type { AppVariables } from '../../middleware/auth.js';
 
 const createSchema = z.object({
@@ -14,9 +13,152 @@ const updateSchema = z.object({
   teamName: z.string().nullable().optional(),
 });
 
-export const adminParticipationRoutes = new Hono<{ Variables: AppVariables }>();
+const participationWithUniversitySchema = z.object({
+  id: z.string().uuid(),
+  editionId: z.string().uuid(),
+  universityId: z.string(),
+  universityName: z.string(),
+  teamName: z.string().nullable(),
+  createdAt: z.any(),
+});
 
-adminParticipationRoutes.post('/editions/:id/participations', async (c) => {
+const participationSchema = z.object({
+  id: z.string().uuid(),
+  editionId: z.string().uuid(),
+  universityId: z.string(),
+  teamName: z.string().nullable(),
+  createdAt: z.any(),
+  updatedAt: z.any(),
+});
+
+const listEditionParticipationsRoute = createRoute({
+  method: 'get',
+  path: '/editions/{id}/participations',
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+  },
+  responses: {
+    200: {
+      description: '大会の参加チーム一覧',
+      content: {
+        'application/json': {
+          schema: z.object({ data: z.array(participationWithUniversitySchema) }),
+        },
+      },
+    },
+  },
+});
+
+const createParticipationRoute = createRoute({
+  method: 'post',
+  path: '/editions/{id}/participations',
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+    body: {
+      content: {
+        'application/json': {
+          schema: createSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: '参加チーム作成',
+      content: {
+        'application/json': {
+          schema: z.object({ data: participationSchema }),
+        },
+      },
+    },
+    400: {
+      description: '不正入力',
+      content: {
+        'application/json': {
+          schema: z.object({ error: z.any() }),
+        },
+      },
+    },
+  },
+});
+
+const updateParticipationRoute = createRoute({
+  method: 'put',
+  path: '/participations/{id}',
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+    body: {
+      content: {
+        'application/json': {
+          schema: updateSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: '参加チーム更新',
+      content: {
+        'application/json': {
+          schema: z.object({ data: participationSchema }),
+        },
+      },
+    },
+    400: {
+      description: '不正入力',
+      content: {
+        'application/json': {
+          schema: z.object({ error: z.any() }),
+        },
+      },
+    },
+    404: {
+      description: '未検出',
+      content: {
+        'application/json': {
+          schema: z.object({ error: z.literal('Not found') }),
+        },
+      },
+    },
+  },
+});
+
+const deleteParticipationRoute = createRoute({
+  method: 'delete',
+  path: '/participations/{id}',
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+  },
+  responses: {
+    204: {
+      description: '参加チーム削除',
+    },
+  },
+});
+
+export const adminParticipationRoutes = new OpenAPIHono<{ Variables: AppVariables }>();
+
+adminParticipationRoutes.openapi(listEditionParticipationsRoute, async (c) => {
+  const editionId = c.req.param('id');
+
+  const rows = await db
+    .select({
+      id: participations.id,
+      editionId: participations.editionId,
+      universityId: participations.universityId,
+      universityName: organizations.name,
+      teamName: participations.teamName,
+      createdAt: participations.createdAt,
+    })
+    .from(participations)
+    .innerJoin(organizations, eq(organizations.id, participations.universityId))
+    .where(eq(participations.editionId, editionId))
+    .orderBy(asc(participations.createdAt), asc(participations.id));
+
+  return c.json({ data: rows }, 200);
+});
+
+adminParticipationRoutes.openapi(createParticipationRoute, async (c) => {
   const editionId = c.req.param('id');
   const body = createSchema.safeParse(await c.req.json());
   if (!body.success) {
@@ -35,7 +177,7 @@ adminParticipationRoutes.post('/editions/:id/participations', async (c) => {
   return c.json({ data: inserted[0] }, 201);
 });
 
-adminParticipationRoutes.put('/participations/:id', async (c) => {
+adminParticipationRoutes.openapi(updateParticipationRoute, async (c) => {
   const body = updateSchema.safeParse(await c.req.json());
   if (!body.success) {
     return c.json({ error: body.error.flatten() }, 400);
@@ -48,13 +190,13 @@ adminParticipationRoutes.put('/participations/:id', async (c) => {
     .returning();
 
   if (!updated[0]) {
-    return c.json({ error: 'Not found' }, 404);
+    return c.json({ error: 'Not found' as const }, 404);
   }
 
-  return c.json({ data: updated[0] });
+  return c.json({ data: updated[0] }, 200);
 });
 
-adminParticipationRoutes.delete('/participations/:id', async (c) => {
+adminParticipationRoutes.openapi(deleteParticipationRoute, async (c) => {
   await db.delete(participations).where(eq(participations.id, c.req.param('id')));
   return c.body(null, 204);
 });

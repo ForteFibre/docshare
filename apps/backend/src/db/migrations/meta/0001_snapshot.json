@@ -1,6 +1,6 @@
 {
-  "id": "6a0bb70c-8e03-46b2-9418-42d4349f90b0",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "f5129c46-676e-4786-a847-c62a9d16a167",
+  "prevId": "6a0bb70c-8e03-46b2-9418-42d4349f90b0",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -32,6 +32,18 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "author_university_name": {
+          "name": "author_university_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "author_team_name": {
+          "name": "author_team_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "body": {
           "name": "body",

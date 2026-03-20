@@ -1,6 +1,5 @@
+import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 import { and, eq } from 'drizzle-orm';
-import { Hono } from 'hono';
-import { z } from 'zod';
 import { db } from '../db/index.js';
 import {
   competitionEditions,
@@ -24,9 +23,77 @@ const bodySchema = z.object({
   contentType: z.string().min(1),
 });
 
-export const uploadRoutes = new Hono<{ Variables: AppVariables }>();
+const presignUploadResponseSchema = z.object({
+  presignedUrl: z.string().url(),
+  s3Key: z.string(),
+  expiresIn: z.number().int(),
+});
 
-uploadRoutes.post('/upload/presign', async (c) => {
+const uploadPresignRoute = createRoute({
+  method: 'post',
+  path: '/upload/presign',
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: bodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: '提出アップロード署名URL発行',
+      content: {
+        'application/json': {
+          schema: z.object({
+            data: presignUploadResponseSchema.extend({
+              templateMaxFileSizeMb: z.number().int(),
+            }),
+          }),
+        },
+      },
+    },
+    400: {
+      description: '不正入力',
+      content: {
+        'application/json': {
+          schema: z.object({ error: z.any() }),
+        },
+      },
+    },
+    403: {
+      description: '権限なし',
+      content: {
+        'application/json': {
+          schema: z.object({ error: z.literal('Forbidden') }),
+        },
+      },
+    },
+    404: {
+      description: '未検出',
+      content: {
+        'application/json': {
+          schema: z.object({ error: z.string() }),
+        },
+      },
+    },
+    409: {
+      description: '提出不可状態',
+      content: {
+        'application/json': {
+          schema: z.object({
+            error: z.literal('Submissions are not accepted in current sharing_status'),
+          }),
+        },
+      },
+    },
+  },
+});
+
+export const uploadRoutes = new OpenAPIHono<{ Variables: AppVariables }>();
+
+uploadRoutes.openapi(uploadPresignRoute, async (c) => {
   const user = c.get('currentUser');
   const body = bodySchema.safeParse(await c.req.json());
 
@@ -53,7 +120,10 @@ uploadRoutes.post('/upload/presign', async (c) => {
   }
 
   if (!isSubmissionMutableStatus(templateContext.edition.sharingStatus)) {
-    return c.json({ error: 'Submissions are not accepted in current sharing_status' }, 409);
+    return c.json(
+      { error: 'Submissions are not accepted in current sharing_status' as const },
+      409,
+    );
   }
 
   const extension = body.data.fileName.split('.').pop()?.toLowerCase();
@@ -88,7 +158,7 @@ uploadRoutes.post('/upload/presign', async (c) => {
   if (!(await isAdmin(user.id))) {
     const organizationIds = await getUserUniversityIds(user.id);
     if (!participationRows[0] || !organizationIds.includes(participationRows[0].universityId)) {
-      return c.json({ error: 'Forbidden' }, 403);
+      return c.json({ error: 'Forbidden' as const }, 403);
     }
   }
 
@@ -118,12 +188,15 @@ uploadRoutes.post('/upload/presign', async (c) => {
     contentType: body.data.contentType,
   });
 
-  return c.json({
-    data: {
-      presignedUrl: result.presignedUrl,
-      s3Key: result.s3Key,
-      expiresIn: result.expiresIn,
-      templateMaxFileSizeMb: template.maxFileSizeMb,
+  return c.json(
+    {
+      data: {
+        presignedUrl: result.presignedUrl,
+        s3Key: result.s3Key,
+        expiresIn: result.expiresIn,
+        templateMaxFileSizeMb: template.maxFileSizeMb,
+      },
     },
-  });
+    200,
+  );
 });
