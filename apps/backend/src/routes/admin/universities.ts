@@ -69,11 +69,43 @@ const listUniversityRoute = createRoute({
   },
 });
 
+const createUniversityRoute = createRoute({
+  method: 'post',
+  path: '/universities',
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: createSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: '大学作成',
+      content: {
+        'application/json': {
+          schema: z.object({ data: organizationSchema }),
+        },
+      },
+    },
+    400: {
+      description: '不正入力',
+      content: {
+        'application/json': {
+          schema: z.object({ error: z.any() }),
+        },
+      },
+    },
+  },
+});
+
 export const adminUniversityRoutes = new OpenAPIHono<{
   Variables: AppVariables;
 }>();
 
-adminUniversityRoutes.post('/universities', async (c) => {
+adminUniversityRoutes.openapi(createUniversityRoute, async (c) => {
   const body = createSchema.safeParse(await c.req.json());
   if (!body.success) {
     return c.json({ error: body.error.flatten() }, 400);

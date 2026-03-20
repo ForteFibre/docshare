@@ -570,7 +570,17 @@ describe('issue #11 api integration', () => {
     expect(json.paths['/api/participations/{id}/submissions']).toBeDefined();
     expect(json.paths['/api/participations/{id}/comments']).toBeDefined();
     expect(json.paths['/api/comments/{id}']).toBeDefined();
+    expect(json.paths['/api/submissions/{id}']).toBeDefined();
+    expect(json.paths['/api/submissions/{id}/download']).toBeDefined();
+    expect(json.paths['/api/submission-history/{historyId}/download']).toBeDefined();
+    expect(json.paths['/api/upload/presign']).toBeDefined();
     expect(json.paths['/api/admin/editions/{id}/participations']).toBeDefined();
+    expect(json.paths['/api/admin/participations/{id}']).toBeDefined();
+    expect(json.paths['/api/admin/series']).toBeDefined();
+    expect(json.paths['/api/admin/series/{id}']).toBeDefined();
+    expect(json.paths['/api/admin/editions/{id}']).toBeDefined();
+    expect(json.paths['/api/admin/editions/{id}/rules/presign']).toBeDefined();
+    expect(json.paths['/api/admin/editions/{id}/rules']).toBeDefined();
     expect(json.paths['/api/university/members/{id}/role']).toBeDefined();
     expect(json.paths['/api/university/members/{id}']).toBeDefined();
 

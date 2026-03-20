@@ -247,6 +247,16 @@ describe('authorization integration (app.request)', () => {
     expect(json.paths['/api/university/members']).toBeDefined();
     expect(json.paths['/api/admin/universities']).toBeDefined();
     expect(json.paths['/api/admin/editions']).toBeDefined();
+    expect(json.paths['/api/upload/presign']).toBeDefined();
+    expect(json.paths['/api/submissions/{id}']).toBeDefined();
+    expect(json.paths['/api/submissions/{id}/download']).toBeDefined();
+    expect(json.paths['/api/submission-history/{historyId}/download']).toBeDefined();
+    expect(json.paths['/api/admin/series']).toBeDefined();
+    expect(json.paths['/api/admin/series/{id}']).toBeDefined();
+    expect(json.paths['/api/admin/editions/{id}']).toBeDefined();
+    expect(json.paths['/api/admin/editions/{id}/rules/presign']).toBeDefined();
+    expect(json.paths['/api/admin/editions/{id}/rules']).toBeDefined();
+    expect(json.paths['/api/admin/participations/{id}']).toBeDefined();
 
     const seriesGet = json.paths['/api/series'] as {
       get?: { parameters?: Array<{ name?: string; in?: string }> };
