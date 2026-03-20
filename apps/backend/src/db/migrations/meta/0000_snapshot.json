@@ -109,12 +109,8 @@
           "name": "comment_participation_id_participation_id_fk",
           "tableFrom": "comment",
           "tableTo": "participation",
-          "columnsFrom": [
-            "participation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["participation_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -122,12 +118,8 @@
           "name": "comment_edition_id_competition_edition_id_fk",
           "tableFrom": "comment",
           "tableTo": "competition_edition",
-          "columnsFrom": [
-            "edition_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["edition_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -135,12 +127,8 @@
           "name": "comment_author_id_user_id_fk",
           "tableFrom": "comment",
           "tableTo": "user",
-          "columnsFrom": [
-            "author_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["author_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -248,12 +236,8 @@
           "name": "competition_edition_series_id_competition_series_id_fk",
           "tableFrom": "competition_edition",
           "tableTo": "competition_series",
-          "columnsFrom": [
-            "series_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["series_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -370,12 +354,8 @@
           "name": "invitation_organization_id_organization_id_fk",
           "tableFrom": "invitation",
           "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organization_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -383,12 +363,8 @@
           "name": "invitation_invited_by_user_id_fk",
           "tableFrom": "invitation",
           "tableTo": "user",
-          "columnsFrom": [
-            "invited_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invited_by"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -463,12 +439,8 @@
           "name": "member_organization_id_organization_id_fk",
           "tableFrom": "member",
           "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organization_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -476,12 +448,8 @@
           "name": "member_user_id_user_id_fk",
           "tableFrom": "member",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -629,12 +597,8 @@
           "name": "participation_edition_id_competition_edition_id_fk",
           "tableFrom": "participation",
           "tableTo": "competition_edition",
-          "columnsFrom": [
-            "edition_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["edition_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -642,12 +606,8 @@
           "name": "participation_university_id_organization_id_fk",
           "tableFrom": "participation",
           "tableTo": "organization",
-          "columnsFrom": [
-            "university_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["university_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -753,12 +713,8 @@
           "name": "submission_history_submission_id_submission_id_fk",
           "tableFrom": "submission_history",
           "tableTo": "submission",
-          "columnsFrom": [
-            "submission_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["submission_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -766,12 +722,8 @@
           "name": "submission_history_submitted_by_user_id_fk",
           "tableFrom": "submission_history",
           "tableTo": "user",
-          "columnsFrom": [
-            "submitted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["submitted_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -864,12 +816,8 @@
           "name": "submission_template_edition_id_competition_edition_id_fk",
           "tableFrom": "submission_template",
           "tableTo": "competition_edition",
-          "columnsFrom": [
-            "edition_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["edition_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1004,12 +952,8 @@
           "name": "submission_template_id_submission_template_id_fk",
           "tableFrom": "submission",
           "tableTo": "submission_template",
-          "columnsFrom": [
-            "template_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["template_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1017,12 +961,8 @@
           "name": "submission_participation_id_participation_id_fk",
           "tableFrom": "submission",
           "tableTo": "participation",
-          "columnsFrom": [
-            "participation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["participation_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1030,12 +970,8 @@
           "name": "submission_submitted_by_user_id_fk",
           "tableFrom": "submission",
           "tableTo": "user",
-          "columnsFrom": [
-            "submitted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["submitted_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }

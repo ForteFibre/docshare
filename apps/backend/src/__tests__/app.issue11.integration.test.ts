@@ -509,6 +509,53 @@ describe('issue #11 api integration', () => {
     });
   });
 
+  it('GET /api/participations/:id/comments includes author universityName and teamName', async () => {
+    const app = createApp();
+
+    enqueueDb(
+      [{ total: 1 }],
+      [
+        {
+          id: '40000000-0000-0000-0000-000000000001',
+          participationId: '10000000-0000-0000-0000-000000000001',
+          editionId: '00000000-0000-0000-0000-000000000001',
+          body: 'Looks good',
+          createdAt: '2026-03-20T00:00:00.000Z',
+          updatedAt: '2026-03-20T00:00:00.000Z',
+          authorId: 'user-1',
+          authorName: 'Alice',
+          universityName: 'Org One',
+          teamName: 'Team A',
+        },
+      ],
+    );
+
+    const res = await app.request(
+      '/api/participations/10000000-0000-0000-0000-000000000001/comments',
+      {
+        headers: { 'x-role': 'member', 'x-organization-id': 'org-1' },
+      },
+    );
+
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as {
+      data: Array<{
+        author: {
+          id: string;
+          name: string;
+          universityName: string | null;
+          teamName: string | null;
+        };
+      }>;
+    };
+    expect(json.data[0]?.author).toEqual({
+      id: 'user-1',
+      name: 'Alice',
+      universityName: 'Org One',
+      teamName: 'Team A',
+    });
+  });
+
   it('OpenAPI includes new paths', async () => {
     const app = createApp();
     const res = await app.request('/api/openapi.json');
@@ -521,6 +568,8 @@ describe('issue #11 api integration', () => {
     expect(json.paths['/api/editions/{id}/my-submission-status']).toBeDefined();
     expect(json.paths['/api/participations/{id}']).toBeDefined();
     expect(json.paths['/api/participations/{id}/submissions']).toBeDefined();
+    expect(json.paths['/api/participations/{id}/comments']).toBeDefined();
+    expect(json.paths['/api/comments/{id}']).toBeDefined();
     expect(json.paths['/api/admin/editions/{id}/participations']).toBeDefined();
     expect(json.paths['/api/university/members/{id}/role']).toBeDefined();
     expect(json.paths['/api/university/members/{id}']).toBeDefined();
@@ -534,5 +583,12 @@ describe('issue #11 api integration', () => {
       get?: { responses?: Record<string, unknown> };
     };
     expect(mySubmissionStatusPath.get?.responses?.['403']).toBeDefined();
+
+    const commentDetailPath = json.paths['/api/comments/{id}'] as {
+      put?: { responses?: Record<string, unknown> };
+      delete?: { responses?: Record<string, unknown> };
+    };
+    expect(commentDetailPath.put?.responses?.['200']).toBeDefined();
+    expect(commentDetailPath.delete?.responses?.['204']).toBeDefined();
   });
 });
