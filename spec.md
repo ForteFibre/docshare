@@ -547,6 +547,14 @@ export const auth = betterAuth({
 | 資料種別テンプレート管理 | `/admin/editions/:id/templates` | テンプレート CRUD、前回からのコピー |
 | 大学管理 | `/admin/universities` | 大学の作成、代表者招待 |
 
+### 7.4 一覧画面のページング仕様
+
+- 無限スクロールは採用しない
+- URL クエリに `page`, `pageSize`, `sort`, `q` を保持する
+- フィルタ変更時は `page=1` に戻す
+- ページサイズ候補は `10`, `20`, `50` とする
+- テーブルが主 UI だが、モバイルではカード表示にフォールバックする
+
 ---
 
 ## 8. API エンドポイント設計
@@ -642,6 +650,24 @@ POST   /api/admin/editions/:id/templates/copy-from/:sourceEditionId
 POST   /api/admin/universities
 GET    /api/admin/universities
 ```
+
+### 8.9 ページング仕様
+
+#### クエリパラメータ
+
+| パラメータ | 型 | 既定値 | 説明 |
+|------------|----|--------|------|
+| page | integer | 1 | 1 始まり |
+| pageSize | integer | 20 | 最大 100 |
+| q | string | なし | 部分一致検索 |
+| sort | string | エンドポイントごと | `field:asc` または `field:desc` |
+
+#### sort のルール
+
+- 単一ソートのみを初期実装で許可する
+- 指定可能なフィールドはエンドポイントごとに OpenAPI に列挙する
+- 不正な sort は 422 を返す
+-
 
 ---
 
