@@ -43,7 +43,7 @@ export function PaginationControls({
           onValueChange={(v) => onPageSizeChange(Number(v))}
         >
           <SelectTrigger className='w-24'>
-            <SelectValue />
+            <SelectValue>{pagination.pageSize} 件</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {PAGE_SIZE_OPTIONS.map((size) => (

@@ -291,6 +291,7 @@ export default function AdminSeriesPage() {
               }
             />
             <SeriesFormDialog
+              key={editingItem?.id ?? 'new'}
               editing={editingItem}
               onClose={() => {
                 setDialogOpen(false);

@@ -1,17 +1,10 @@
 'use client';
 
+import { UniversitySelect } from '@/components/admin/UniversitySelect';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { DataTable } from '@/components/common/DataTable';
 import { Button } from '@/components/ui/button';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ApiError, apiClient, throwIfError } from '@/lib/api/client';
 import { queryKeys } from '@/lib/query/keys';
 import { getApiErrorMessage } from '@/lib/utils/errors';
@@ -30,8 +23,6 @@ type Participation = {
   createdAt: unknown;
 };
 
-type University = { id: string; name: string; slug: string };
-
 export default function AdminParticipationsPage({
   params,
 }: {
@@ -41,7 +32,6 @@ export default function AdminParticipationsPage({
   const queryClient = useQueryClient();
   const [selectedUniversityId, setSelectedUniversityId] = useState('');
   const [teamName, setTeamName] = useState('');
-  const [comboOpen, setComboOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTeamName, setEditingTeamName] = useState('');
 
@@ -50,16 +40,6 @@ export default function AdminParticipationsPage({
     queryFn: async () => {
       const result = await apiClient.GET('/api/admin/editions/{id}/participations', {
         params: { path: { id: editionId } },
-      });
-      return throwIfError(result);
-    },
-  });
-
-  const { data: universitiesData } = useQuery({
-    queryKey: ['admin', 'universities-all'],
-    queryFn: async () => {
-      const result = await apiClient.GET('/api/admin/universities', {
-        params: { query: { pageSize: 200 } },
       });
       return throwIfError(result);
     },
@@ -111,10 +91,6 @@ export default function AdminParticipationsPage({
     },
     onError: (err) => toast.error(getApiErrorMessage(err)),
   });
-
-  const universities = (universitiesData?.data ?? []) as University[];
-  const selectedUniversity = universities.find((u) => u.id === selectedUniversityId);
-
   const columns: ColumnDef<Participation>[] = [
     { header: '大学名', accessorKey: 'universityName' },
     {
@@ -181,32 +157,10 @@ export default function AdminParticipationsPage({
       <div className='flex gap-3 items-end flex-wrap'>
         <div className='space-y-1'>
           <span className='text-sm font-medium'>大学</span>
-          <Popover open={comboOpen} onOpenChange={setComboOpen}>
-            <PopoverTrigger render={<Button variant='outline' className='w-56 justify-start' />}>
-              {selectedUniversity?.name ?? '大学を選択...'}
-            </PopoverTrigger>
-            <PopoverContent className='w-56 p-0'>
-              <Command>
-                <CommandInput placeholder='検索...' />
-                <CommandEmpty>見つかりません</CommandEmpty>
-                <CommandGroup>
-                  {universities.map((u) => (
-                    <CommandItem
-                      key={u.id}
-                      value={u.name}
-                      onSelect={() => {
-                        setSelectedUniversityId(u.id);
-                        setComboOpen(false);
-                      }}
-                    >
-                      {selectedUniversityId === u.id && <CheckIcon className='h-3 w-3 mr-1' />}
-                      {u.name}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </Command>
-            </PopoverContent>
-          </Popover>
+          <UniversitySelect
+            value={selectedUniversityId}
+            onValueChange={(id) => setSelectedUniversityId(id)}
+          />
         </div>
         <div className='space-y-1'>
           <label htmlFor='team-name-input' className='text-sm font-medium'>

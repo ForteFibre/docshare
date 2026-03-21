@@ -40,6 +40,13 @@ import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
+const SHARING_STATUS_LABELS: Record<Edition['sharingStatus'], string> = {
+  draft: '準備中',
+  accepting: '受付中',
+  sharing: '共有中',
+  closed: '締切後',
+};
+
 type Edition = {
   id: string;
   seriesId: string;
@@ -155,7 +162,9 @@ function EditionFormDialog({ editing, onClose }: { editing: Edition | null; onCl
               <span className='text-sm font-medium'>シリーズ *</span>
               <Select value={field.state.value} onValueChange={(v) => field.handleChange(v ?? '')}>
                 <SelectTrigger>
-                  <SelectValue placeholder='選択...' />
+                  <SelectValue placeholder='選択...'>
+                    {series.find((item) => item.id === field.state.value)?.name}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {series.map((s) => (
@@ -237,7 +246,7 @@ function EditionFormDialog({ editing, onClose }: { editing: Edition | null; onCl
                 }
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue>{SHARING_STATUS_LABELS[field.state.value]}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value='draft'>準備中</SelectItem>
@@ -397,7 +406,7 @@ export default function AdminEditionsPage() {
           }
         >
           <SelectTrigger className='h-8 w-28'>
-            <SelectValue />
+            <SelectValue>{SHARING_STATUS_LABELS[row.original.sharingStatus]}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value='draft'>準備中</SelectItem>
@@ -502,6 +511,7 @@ export default function AdminEditionsPage() {
               }
             />
             <EditionFormDialog
+              key={editingItem?.id ?? 'new'}
               editing={editingItem}
               onClose={() => {
                 setDialogOpen(false);

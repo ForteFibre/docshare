@@ -40,6 +40,11 @@ import { use, useState } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
+const ACCEPT_TYPE_LABELS: Record<Template['acceptType'], string> = {
+  file: 'ファイル',
+  url: 'URL',
+};
+
 type Template = {
   id: string;
   name: string;
@@ -185,7 +190,7 @@ function TemplateFormDialog({
                 onValueChange={(v) => field.handleChange((v ?? 'file') as 'file' | 'url')}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue>{ACCEPT_TYPE_LABELS[field.state.value]}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value='file'>ファイル</SelectItem>
@@ -490,6 +495,7 @@ export default function AdminTemplatesPage({ params }: { params: Promise<{ id: s
               }
             />
             <TemplateFormDialog
+              key={editingItem?.id ?? 'new'}
               editionId={editionId}
               editing={editingItem}
               onClose={() => {
