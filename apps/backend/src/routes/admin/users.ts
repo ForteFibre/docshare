@@ -56,6 +56,15 @@ const updateMembershipRoleBodySchema = z.object({
   role: z.enum(['owner', 'member']),
 });
 
+const isMemberUniqueViolation = (error: unknown): boolean => {
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+
+  const pgError = error as { code?: unknown; constraint?: unknown };
+  return pgError.code === '23505' && pgError.constraint === 'member_org_user_unique';
+};
+
 const listUsersRoute = createRoute({
   method: 'get',
   path: '/users',
@@ -370,17 +379,24 @@ adminUserRoutes.openapi(createUserMembershipRoute, async (c) => {
     return c.json({ error: 'Membership already exists' as const }, 409);
   }
 
-  const inserted = await db
-    .insert(members)
-    .values({
-      id: randomUUID(),
-      userId,
-      organizationId: body.data.organizationId,
-      role: body.data.role,
-    })
-    .returning();
+  try {
+    const inserted = await db
+      .insert(members)
+      .values({
+        id: randomUUID(),
+        userId,
+        organizationId: body.data.organizationId,
+        role: body.data.role,
+      })
+      .returning();
 
-  return c.json({ data: inserted[0] }, 201);
+    return c.json({ data: inserted[0] }, 201);
+  } catch (error) {
+    if (isMemberUniqueViolation(error)) {
+      return c.json({ error: 'Membership already exists' as const }, 409);
+    }
+    throw error;
+  }
 });
 
 adminUserRoutes.openapi(updateMembershipRoleRoute, async (c) => {

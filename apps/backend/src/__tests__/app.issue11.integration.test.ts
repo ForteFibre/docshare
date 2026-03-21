@@ -575,6 +575,23 @@ describe('issue #11 api integration', () => {
     expect(duplicateRes.status).toBe(409);
 
     enqueueDb(
+      [{ id: 'u-1' }],
+      [{ id: 'org-2' }],
+      [],
+      Promise.reject({ code: '23505', constraint: 'member_org_user_unique' }),
+    );
+    const raceDuplicateRes = await app.request('/api/admin/users/u-1/memberships', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-role': 'admin',
+      },
+      body: JSON.stringify({ organizationId: 'org-2', role: 'member' }),
+    });
+    expect(raceDuplicateRes.status).toBe(409);
+    expect(await raceDuplicateRes.json()).toEqual({ error: 'Membership already exists' });
+
+    enqueueDb(
       [{ id: 'm-2', userId: 'u-1', organizationId: 'org-2', role: 'member' }],
       [
         {
