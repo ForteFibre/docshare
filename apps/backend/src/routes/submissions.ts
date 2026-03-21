@@ -11,6 +11,7 @@ import {
   submissions,
   users,
 } from '../db/schema.js';
+import { env } from '../lib/config.js';
 import {
   createPaginatedResponseSchema,
   createPaginationMeta,
@@ -25,8 +26,10 @@ import {
   getUserUniversityIds,
   isAdmin,
 } from '../services/permissions.js';
-import { presignDownload } from '../services/storage.js';
+import { getObjectMetadata, presignDownload } from '../services/storage.js';
+import { validateUploadedFileReference } from '../services/submission-files.js';
 import {
+  isContentTypeConsistent,
   isSubmissionMutableStatus,
   validateSubmissionPayload,
 } from '../services/submission-validation.js';
@@ -52,7 +55,6 @@ const submissionSchema = z.object({
   participationId: z.string().uuid(),
   submittedBy: z.string(),
   version: z.number().int(),
-  fileS3Key: z.string().nullable(),
   fileName: z.string().nullable(),
   fileSizeBytes: z.number().nullable(),
   fileMimeType: z.string().nullable(),
@@ -122,7 +124,6 @@ const historySchema = z.object({
     id: z.string(),
     name: z.string(),
   }),
-  fileS3Key: z.string().nullable(),
   fileName: z.string().nullable(),
   fileSizeBytes: z.number().nullable(),
   fileMimeType: z.string().nullable(),
@@ -403,6 +404,70 @@ const downloadSubmissionHistoryRoute = createRoute({
 
 export const submissionRoutes = new OpenAPIHono<{ Variables: AppVariables }>();
 
+const toPublicSubmission = (submission: typeof submissions.$inferSelect) => {
+  const { fileS3Key: _fileS3Key, ...publicSubmission } = submission;
+  return publicSubmission;
+};
+
+const normalizeSubmissionHistory = (
+  history: Omit<typeof submissionHistories.$inferSelect, 'fileS3Key'> & {
+    submittedByUser: {
+      id: string;
+      name: string;
+    };
+  },
+) => {
+  return history;
+};
+
+const validateUploadedFileOrReject = async (params: {
+  template: typeof submissionTemplates.$inferSelect;
+  editionId: string;
+  participationId: string;
+  templateId: string;
+  version: number;
+  payload: {
+    s3Key?: string;
+    fileName?: string;
+    fileSizeBytes?: number;
+    mimeType?: string;
+    url?: string;
+  };
+}): Promise<{ ok: true } | { ok: false; error: string }> => {
+  if (params.template.acceptType !== 'file') {
+    return { ok: true };
+  }
+
+  const { s3Key, fileName, fileSizeBytes, mimeType } = params.payload;
+  if (!s3Key || !fileName || !fileSizeBytes || !mimeType) {
+    return { ok: false, error: 'Missing file fields for file template' };
+  }
+
+  if (!isContentTypeConsistent(fileName, mimeType)) {
+    return { ok: false, error: 'mimeType is inconsistent with file extension' };
+  }
+
+  let metadata: { contentLength: number | null; contentType: string | null };
+  try {
+    metadata = await getObjectMetadata(env.S3_BUCKET_SUBMISSIONS, s3Key);
+  } catch {
+    return { ok: false, error: 'Uploaded file not found' };
+  }
+
+  return validateUploadedFileReference({
+    template: params.template,
+    metadata,
+    editionId: params.editionId,
+    participationId: params.participationId,
+    templateId: params.templateId,
+    version: params.version,
+    s3Key,
+    fileName,
+    fileSizeBytes,
+    mimeType,
+  });
+};
+
 const assertCanMutateParticipation = async (
   userId: string,
   participationId: string,
@@ -487,6 +552,18 @@ submissionRoutes.openapi(createSubmissionRoute, async (c) => {
     return c.json({ error: 'Already exists for this template and participation' }, 409);
   }
 
+  const uploadedFileValidation = await validateUploadedFileOrReject({
+    template: templateParticipationRows[0].template,
+    editionId: templateParticipationRows[0].edition.id,
+    participationId: body.data.participationId,
+    templateId: body.data.templateId,
+    version: 1,
+    payload: body.data,
+  });
+  if (!uploadedFileValidation.ok) {
+    return c.json({ error: uploadedFileValidation.error }, 400);
+  }
+
   const inserted = await db
     .insert(submissions)
     .values({
@@ -501,7 +578,7 @@ submissionRoutes.openapi(createSubmissionRoute, async (c) => {
     })
     .returning();
 
-  return c.json({ data: inserted[0] }, 201);
+  return c.json({ data: toPublicSubmission(inserted[0]) }, 201);
 });
 
 submissionRoutes.openapi(updateSubmissionRoute, async (c) => {
@@ -551,6 +628,18 @@ submissionRoutes.openapi(updateSubmissionRoute, async (c) => {
     return c.json({ error: validation.error }, 400);
   }
 
+  const uploadedFileValidation = await validateUploadedFileOrReject({
+    template: contextRows[0].template,
+    editionId: contextRows[0].edition.id,
+    participationId: existing.participationId,
+    templateId: existing.templateId,
+    version: existing.version + 1,
+    payload: body.data,
+  });
+  if (!uploadedFileValidation.ok) {
+    return c.json({ error: uploadedFileValidation.error }, 400);
+  }
+
   const updated = await db.transaction(async (tx) => {
     await tx.insert(submissionHistories).values({
       submissionId: existing.id,
@@ -581,7 +670,7 @@ submissionRoutes.openapi(updateSubmissionRoute, async (c) => {
     return next[0];
   });
 
-  return c.json({ data: updated }, 200);
+  return c.json({ data: toPublicSubmission(updated) }, 200);
 });
 
 submissionRoutes.openapi(deleteSubmissionRoute, async (c) => {
@@ -668,7 +757,10 @@ submissionRoutes.openapi(listEditionSubmissionsRoute, async (c) => {
 
   return c.json(
     {
-      data: rows,
+      data: rows.map((row) => ({
+        ...row,
+        submission: toPublicSubmission(row.submission),
+      })),
       pagination: createPaginationMeta({
         page: parsed.value.page,
         pageSize: parsed.value.pageSize,
@@ -713,10 +805,7 @@ submissionRoutes.openapi(downloadSubmissionRoute, async (c) => {
     return c.json({ error: 'File submission not found' as const }, 400);
   }
 
-  const download = await presignDownload(
-    process.env.S3_BUCKET_SUBMISSIONS ?? 'robocon-submissions',
-    row[0].submission.fileS3Key,
-  );
+  const download = await presignDownload(env.S3_BUCKET_SUBMISSIONS, row[0].submission.fileS3Key);
   return c.json({ data: download }, 200);
 });
 
@@ -786,7 +875,6 @@ submissionRoutes.openapi(listSubmissionHistoriesRoute, async (c) => {
         id: users.id,
         name: users.name,
       },
-      fileS3Key: submissionHistories.fileS3Key,
       fileName: submissionHistories.fileName,
       fileSizeBytes: submissionHistories.fileSizeBytes,
       fileMimeType: submissionHistories.fileMimeType,
@@ -802,7 +890,7 @@ submissionRoutes.openapi(listSubmissionHistoriesRoute, async (c) => {
 
   return c.json(
     {
-      data: histories,
+      data: histories.map((history) => normalizeSubmissionHistory(history)),
       pagination: createPaginationMeta({
         page: parsed.value.page,
         pageSize: parsed.value.pageSize,
@@ -844,9 +932,6 @@ submissionRoutes.openapi(downloadSubmissionHistoryRoute, async (c) => {
     return c.json({ error: 'No file in this history entry' as const }, 400);
   }
 
-  const download = await presignDownload(
-    process.env.S3_BUCKET_SUBMISSIONS ?? 'robocon-submissions',
-    row[0].history.fileS3Key,
-  );
+  const download = await presignDownload(env.S3_BUCKET_SUBMISSIONS, row[0].history.fileS3Key);
   return c.json({ data: download }, 200);
 });

@@ -21,6 +21,7 @@ const bodySchema = z.object({
   templateId: z.string().uuid(),
   fileName: z.string().min(1),
   contentType: z.string().min(1),
+  fileSizeBytes: z.number().int().positive(),
 });
 
 const presignUploadResponseSchema = z.object({
@@ -138,6 +139,10 @@ uploadRoutes.openapi(uploadPresignRoute, async (c) => {
     return c.json({ error: 'contentType is inconsistent with file extension' }, 400);
   }
 
+  if (body.data.fileSizeBytes > template.maxFileSizeMb * 1024 * 1024) {
+    return c.json({ error: 'File exceeds template max size' }, 400);
+  }
+
   const participationRows = await db
     .select({
       universityId: participations.universityId,
@@ -186,6 +191,7 @@ uploadRoutes.openapi(uploadPresignRoute, async (c) => {
     bucket: env.S3_BUCKET_SUBMISSIONS,
     key,
     contentType: body.data.contentType,
+    contentLength: body.data.fileSizeBytes,
   });
 
   return c.json(

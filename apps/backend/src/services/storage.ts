@@ -1,5 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  GetObjectCommand,
+  HeadObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from '../lib/config.js';
 
@@ -18,6 +23,7 @@ type PresignUploadInput = {
   keyPrefix: string;
   fileName: string;
   contentType: string;
+  contentLength?: number;
   expiresIn?: number;
 };
 
@@ -25,11 +31,16 @@ type PresignUploadByKeyInput = {
   bucket: string;
   key: string;
   contentType: string;
+  contentLength?: number;
   expiresIn?: number;
 };
 
 const encodeName = (name: string): string => {
   return name.replace(/[^a-zA-Z0-9._-]/g, '_');
+};
+
+const escapeRegex = (value: string): string => {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 };
 
 export const buildVersionedSubmissionKey = (params: {
@@ -46,6 +57,22 @@ export const buildRuleKey = (editionId: string, fileName: string): string => {
   return `rules/${editionId}/${randomUUID()}_${encodeName(fileName)}`;
 };
 
+export const matchesVersionedSubmissionKey = (params: {
+  key: string;
+  editionId: string;
+  participationId: string;
+  templateId: string;
+  version: number;
+  fileName: string;
+}): boolean => {
+  const encodedFileName = escapeRegex(encodeName(params.fileName));
+  const pattern = new RegExp(
+    `^submissions/${escapeRegex(params.editionId)}/${escapeRegex(params.participationId)}/${escapeRegex(params.templateId)}/v${params.version}_[0-9a-f-]{36}_${encodedFileName}$`,
+  );
+
+  return pattern.test(params.key);
+};
+
 export const presignUpload = async (
   input: PresignUploadInput,
 ): Promise<{ presignedUrl: string; s3Key: string; expiresIn: number }> => {
@@ -56,6 +83,7 @@ export const presignUpload = async (
     Bucket: input.bucket,
     Key: key,
     ContentType: input.contentType,
+    ContentLength: input.contentLength,
   });
 
   const presignedUrl = await getSignedUrl(s3, command, { expiresIn });
@@ -76,6 +104,7 @@ export const presignUploadByKey = async (
     Bucket: input.bucket,
     Key: input.key,
     ContentType: input.contentType,
+    ContentLength: input.contentLength,
   });
 
   const presignedUrl = await getSignedUrl(s3, command, { expiresIn });
@@ -98,4 +127,21 @@ export const presignDownload = async (
   });
   const presignedUrl = await getSignedUrl(s3, command, { expiresIn });
   return { presignedUrl, expiresIn };
+};
+
+export const getObjectMetadata = async (
+  bucket: string,
+  key: string,
+): Promise<{ contentLength: number | null; contentType: string | null }> => {
+  const response = await s3.send(
+    new HeadObjectCommand({
+      Bucket: bucket,
+      Key: key,
+    }),
+  );
+
+  return {
+    contentLength: response.ContentLength ?? null,
+    contentType: response.ContentType ?? null,
+  };
 };
