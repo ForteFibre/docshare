@@ -290,14 +290,16 @@ export default function AdminSeriesPage() {
                 </Button>
               }
             />
-            <SeriesFormDialog
-              key={editingItem?.id ?? 'new'}
-              editing={editingItem}
-              onClose={() => {
-                setDialogOpen(false);
-                setEditingItem(null);
-              }}
-            />
+            {dialogOpen ? (
+              <SeriesFormDialog
+                key={editingItem?.id ?? 'new'}
+                editing={editingItem}
+                onClose={() => {
+                  setDialogOpen(false);
+                  setEditingItem(null);
+                }}
+              />
+            ) : null}
           </Dialog>
         </div>
       </div>

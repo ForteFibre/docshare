@@ -510,14 +510,16 @@ export default function AdminEditionsPage() {
                 </Button>
               }
             />
-            <EditionFormDialog
-              key={editingItem?.id ?? 'new'}
-              editing={editingItem}
-              onClose={() => {
-                setDialogOpen(false);
-                setEditingItem(null);
-              }}
-            />
+            {dialogOpen ? (
+              <EditionFormDialog
+                key={editingItem?.id ?? 'new'}
+                editing={editingItem}
+                onClose={() => {
+                  setDialogOpen(false);
+                  setEditingItem(null);
+                }}
+              />
+            ) : null}
           </Dialog>
         </div>
       </div>

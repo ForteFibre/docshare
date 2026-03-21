@@ -494,15 +494,17 @@ export default function AdminTemplatesPage({ params }: { params: Promise<{ id: s
                 </Button>
               }
             />
-            <TemplateFormDialog
-              key={editingItem?.id ?? 'new'}
-              editionId={editionId}
-              editing={editingItem}
-              onClose={() => {
-                setDialogOpen(false);
-                setEditingItem(null);
-              }}
-            />
+            {dialogOpen ? (
+              <TemplateFormDialog
+                key={editingItem?.id ?? 'new'}
+                editionId={editionId}
+                editing={editingItem}
+                onClose={() => {
+                  setDialogOpen(false);
+                  setEditingItem(null);
+                }}
+              />
+            ) : null}
           </Dialog>
         </div>
       </div>
