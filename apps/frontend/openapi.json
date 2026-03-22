@@ -1458,6 +1458,15 @@
             "required": true,
             "name": "id",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "templateId",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1514,14 +1523,7 @@
                     },
                     "reason": {
                       "type": "string",
-                      "enum": [
-                        "organization_context_required",
-                        "sharing_status_not_viewable",
-                        "organization_not_participating",
-                        "template_not_submitted",
-                        "template_context_required",
-                        "participation_not_found"
-                      ]
+                      "enum": ["context_required", "access_denied"]
                     }
                   },
                   "required": ["error", "reason"]
@@ -1720,14 +1722,7 @@
                     },
                     "reason": {
                       "type": "string",
-                      "enum": [
-                        "organization_context_required",
-                        "sharing_status_not_viewable",
-                        "organization_not_participating",
-                        "template_not_submitted",
-                        "template_context_required",
-                        "participation_not_found"
-                      ]
+                      "enum": ["context_required", "access_denied"]
                     }
                   },
                   "required": ["error", "reason"]
@@ -2106,14 +2101,7 @@
                     },
                     "reason": {
                       "type": "string",
-                      "enum": [
-                        "organization_context_required",
-                        "sharing_status_not_viewable",
-                        "organization_not_participating",
-                        "template_not_submitted",
-                        "template_context_required",
-                        "participation_not_found"
-                      ]
+                      "enum": ["context_required", "access_denied"]
                     }
                   },
                   "required": ["error", "reason"]
@@ -2189,7 +2177,7 @@
               "type": "string",
               "format": "uuid"
             },
-            "required": false,
+            "required": true,
             "name": "templateId",
             "in": "query"
           }
@@ -2365,14 +2353,7 @@
                     },
                     "reason": {
                       "type": "string",
-                      "enum": [
-                        "organization_context_required",
-                        "sharing_status_not_viewable",
-                        "organization_not_participating",
-                        "template_not_submitted",
-                        "template_context_required",
-                        "participation_not_found"
-                      ]
+                      "enum": ["context_required", "access_denied"]
                     }
                   },
                   "required": ["error", "reason"]
@@ -2544,14 +2525,7 @@
                                 "denyReason": {
                                   "type": "string",
                                   "nullable": true,
-                                  "enum": [
-                                    "organization_context_required",
-                                    "sharing_status_not_viewable",
-                                    "organization_not_participating",
-                                    "template_not_submitted",
-                                    "template_context_required",
-                                    "participation_not_found"
-                                  ]
+                                  "enum": ["context_required", "access_denied"]
                                 },
                                 "submission": {
                                   "type": "object",
@@ -2678,14 +2652,7 @@
                     },
                     "reason": {
                       "type": "string",
-                      "enum": [
-                        "organization_context_required",
-                        "sharing_status_not_viewable",
-                        "organization_not_participating",
-                        "template_not_submitted",
-                        "template_context_required",
-                        "participation_not_found"
-                      ]
+                      "enum": ["context_required", "access_denied"]
                     }
                   },
                   "required": ["error", "reason"]
@@ -2782,14 +2749,7 @@
                     },
                     "reason": {
                       "type": "string",
-                      "enum": [
-                        "organization_context_required",
-                        "sharing_status_not_viewable",
-                        "organization_not_participating",
-                        "template_not_submitted",
-                        "template_context_required",
-                        "participation_not_found"
-                      ]
+                      "enum": ["context_required", "access_denied"]
                     }
                   },
                   "required": ["error", "reason"]
@@ -3008,14 +2968,7 @@
                     },
                     "reason": {
                       "type": "string",
-                      "enum": [
-                        "organization_context_required",
-                        "sharing_status_not_viewable",
-                        "organization_not_participating",
-                        "template_not_submitted",
-                        "template_context_required",
-                        "participation_not_found"
-                      ]
+                      "enum": ["context_required", "access_denied"]
                     }
                   },
                   "required": ["error", "reason"]
@@ -3339,14 +3292,7 @@
                     },
                     "reason": {
                       "type": "string",
-                      "enum": [
-                        "organization_context_required",
-                        "sharing_status_not_viewable",
-                        "organization_not_participating",
-                        "template_not_submitted",
-                        "template_context_required",
-                        "participation_not_found"
-                      ]
+                      "enum": ["context_required", "access_denied"]
                     }
                   },
                   "required": ["error", "reason"]
@@ -3497,14 +3443,7 @@
                     },
                     "reason": {
                       "type": "string",
-                      "enum": [
-                        "organization_context_required",
-                        "sharing_status_not_viewable",
-                        "organization_not_participating",
-                        "template_not_submitted",
-                        "template_context_required",
-                        "participation_not_found"
-                      ]
+                      "enum": ["context_required", "access_denied"]
                     }
                   },
                   "required": ["error", "reason"]

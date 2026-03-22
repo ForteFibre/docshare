@@ -823,9 +823,7 @@ export interface paths {
   };
   '/api/participations/{id}': {
     parameters: {
-      query?: {
-        templateId?: string;
-      };
+      query?: never;
       header?: never;
       path?: never;
       cookie?: never;
@@ -873,13 +871,7 @@ export interface paths {
               /** @enum {string} */
               error: 'Forbidden';
               /** @enum {string} */
-              reason:
-                | 'organization_context_required'
-                | 'sharing_status_not_viewable'
-                | 'organization_not_participating'
-                | 'template_not_submitted'
-                | 'template_context_required'
-                | 'participation_not_found';
+              reason: 'context_required' | 'access_denied';
             };
           };
         };
@@ -983,13 +975,7 @@ export interface paths {
               /** @enum {string} */
               error: 'Forbidden';
               /** @enum {string} */
-              reason:
-                | 'organization_context_required'
-                | 'sharing_status_not_viewable'
-                | 'organization_not_participating'
-                | 'template_not_submitted'
-                | 'template_context_required'
-                | 'participation_not_found';
+              reason: 'context_required' | 'access_denied';
             };
           };
         };
@@ -1238,13 +1224,7 @@ export interface paths {
               /** @enum {string} */
               error: 'Forbidden';
               /** @enum {string} */
-              reason:
-                | 'organization_context_required'
-                | 'sharing_status_not_viewable'
-                | 'organization_not_participating'
-                | 'template_not_submitted'
-                | 'template_context_required'
-                | 'participation_not_found';
+              reason: 'context_required' | 'access_denied';
             };
           };
         };
@@ -1264,7 +1244,7 @@ export interface paths {
     };
     get: {
       parameters: {
-        query?: {
+        query: {
           page?: number;
           pageSize?: number;
           sort?:
@@ -1275,7 +1255,7 @@ export interface paths {
             | 'teamName:asc'
             | 'teamName:desc';
           q?: string;
-          templateId?: string;
+          templateId: string;
         };
         header?: never;
         path: {
@@ -1353,13 +1333,7 @@ export interface paths {
               /** @enum {string} */
               error: 'Forbidden';
               /** @enum {string} */
-              reason:
-                | 'organization_context_required'
-                | 'sharing_status_not_viewable'
-                | 'organization_not_participating'
-                | 'template_not_submitted'
-                | 'template_context_required'
-                | 'participation_not_found';
+              reason: 'context_required' | 'access_denied';
             };
           };
         };
@@ -1444,14 +1418,7 @@ export interface paths {
                   submitted: boolean;
                   viewable: boolean;
                   /** @enum {string|null} */
-                  denyReason:
-                    | 'organization_context_required'
-                    | 'sharing_status_not_viewable'
-                    | 'organization_not_participating'
-                    | 'template_not_submitted'
-                    | 'template_context_required'
-                    | 'participation_not_found'
-                    | null;
+                  denyReason: 'context_required' | 'access_denied' | null;
                   submission: {
                     /** Format: uuid */
                     id: string;
@@ -1503,13 +1470,7 @@ export interface paths {
               /** @enum {string} */
               error: 'Forbidden';
               /** @enum {string} */
-              reason:
-                | 'organization_context_required'
-                | 'sharing_status_not_viewable'
-                | 'organization_not_participating'
-                | 'template_not_submitted'
-                | 'template_context_required'
-                | 'participation_not_found';
+              reason: 'context_required' | 'access_denied';
             };
           };
         };
@@ -1590,13 +1551,7 @@ export interface paths {
               /** @enum {string} */
               error: 'Forbidden';
               /** @enum {string} */
-              reason:
-                | 'organization_context_required'
-                | 'sharing_status_not_viewable'
-                | 'organization_not_participating'
-                | 'template_not_submitted'
-                | 'template_context_required'
-                | 'participation_not_found';
+              reason: 'context_required' | 'access_denied';
             };
           };
         };
@@ -1702,13 +1657,7 @@ export interface paths {
               /** @enum {string} */
               error: 'Forbidden';
               /** @enum {string} */
-              reason:
-                | 'organization_context_required'
-                | 'sharing_status_not_viewable'
-                | 'organization_not_participating'
-                | 'template_not_submitted'
-                | 'template_context_required'
-                | 'participation_not_found';
+              reason: 'context_required' | 'access_denied';
             };
           };
         };
@@ -1906,13 +1855,7 @@ export interface paths {
               /** @enum {string} */
               error: 'Forbidden';
               /** @enum {string} */
-              reason:
-                | 'organization_context_required'
-                | 'sharing_status_not_viewable'
-                | 'organization_not_participating'
-                | 'template_not_submitted'
-                | 'template_context_required'
-                | 'participation_not_found';
+              reason: 'context_required' | 'access_denied';
             };
           };
         };
@@ -1996,13 +1939,7 @@ export interface paths {
               /** @enum {string} */
               error: 'Forbidden';
               /** @enum {string} */
-              reason:
-                | 'organization_context_required'
-                | 'sharing_status_not_viewable'
-                | 'organization_not_participating'
-                | 'template_not_submitted'
-                | 'template_context_required'
-                | 'participation_not_found';
+              reason: 'context_required' | 'access_denied';
             };
           };
         };

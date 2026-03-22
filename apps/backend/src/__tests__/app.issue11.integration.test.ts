@@ -125,6 +125,7 @@ vi.mock('../middleware/admin.js', () => ({
 
 const mockCanViewParticipation = vi.fn(async () => true);
 const mockCanViewOtherSubmissions = vi.fn(async () => true);
+const mockCanViewOtherSubmissionsByTemplate = vi.fn(async () => ({ allowed: true as const }));
 const mockCanViewParticipationWithReason = vi.fn(async () => ({ allowed: true as const }));
 const mockGetObjectMetadata = vi.fn(async () => ({
   contentLength: 1024,
@@ -138,7 +139,7 @@ const mockPresignDownload = vi.fn(async (_bucket: string, key: string) => ({
 vi.mock('../services/permissions.js', () => ({
   canDeleteSubmission: vi.fn(async () => true),
   canViewOtherSubmissions: mockCanViewOtherSubmissions,
-  canViewOtherSubmissionsByTemplate: vi.fn(async () => ({ allowed: true as const })),
+  canViewOtherSubmissionsByTemplate: mockCanViewOtherSubmissionsByTemplate,
   canViewParticipation: mockCanViewParticipation,
   canViewParticipationWithReason: mockCanViewParticipationWithReason,
   canComment: vi.fn(async () => true),
@@ -738,7 +739,7 @@ describe('issue #11 api integration', () => {
     );
 
     const res = await app.request(
-      '/api/editions/00000000-0000-0000-0000-000000000001/submissions',
+      '/api/editions/00000000-0000-0000-0000-000000000001/submissions?templateId=20000000-0000-0000-0000-000000000001',
       {
         headers: { 'x-role': 'member', 'x-organization-id': 'org-1' },
       },
@@ -749,6 +750,30 @@ describe('issue #11 api integration', () => {
       data: Array<{ participation: { universityName?: string } }>;
     };
     expect(json.data[0]?.participation.universityName).toBe('Org One');
+    expect(mockCanViewOtherSubmissionsByTemplate).toHaveBeenCalledWith(
+      'member-user',
+      '00000000-0000-0000-0000-000000000001',
+      '20000000-0000-0000-0000-000000000001',
+      'org-1',
+    );
+    expect(mockCanViewOtherSubmissions).not.toHaveBeenCalled();
+  });
+
+  it('GET /api/editions/:id/submissions returns 400 when templateId is missing', async () => {
+    const app = createApp();
+
+    const res = await app.request(
+      '/api/editions/00000000-0000-0000-0000-000000000001/submissions',
+      {
+        headers: { 'x-role': 'member', 'x-organization-id': 'org-1' },
+      },
+    );
+
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { error?: unknown };
+    expect(body.error).toBeDefined();
+    expect(mockCanViewOtherSubmissionsByTemplate).not.toHaveBeenCalled();
+    expect(mockCanViewOtherSubmissions).not.toHaveBeenCalled();
   });
 
   it('GET /api/submissions/:id/history returns submittedByUser with id and name', async () => {

@@ -21,7 +21,6 @@ import {
 import type { AppVariables } from '../middleware/auth.js';
 import {
   canDeleteSubmission,
-  canViewOtherSubmissions,
   canViewOtherSubmissionsByTemplate,
   canViewParticipationWithReason,
   getUserUniversityIds,
@@ -196,7 +195,7 @@ const listEditionSubmissionsRoute = createRoute({
   request: {
     params: z.object({ id: z.string().uuid() }),
     query: createPagingQuerySchema(listEditionSubmissionSortValues, true).extend({
-      templateId: z.string().uuid().optional(),
+      templateId: z.string().uuid(),
     }),
   },
   responses: {
@@ -792,7 +791,7 @@ submissionRoutes.openapi(listEditionSubmissionsRoute, async (c) => {
   const parsed = parsePagingParams({
     query: c.req.query(),
     schema: createPagingQuerySchema(listEditionSubmissionSortValues, true).extend({
-      templateId: z.string().uuid().optional(),
+      templateId: z.string().uuid(),
     }),
     sortValues: listEditionSubmissionSortValues,
     defaultSort: 'createdAt:asc',
@@ -804,26 +803,19 @@ submissionRoutes.openapi(listEditionSubmissionsRoute, async (c) => {
     return c.json({ error: 'Invalid sort' as const }, 422);
   }
 
-  const templateId = c.req.query('templateId') ?? undefined;
+  const templateId = c.req.query('templateId') as string;
 
-  if (templateId) {
-    const decision = await canViewOtherSubmissionsByTemplate(
-      user.id,
-      editionId,
-      templateId,
-      c.get('organizationId'),
+  const decision = await canViewOtherSubmissionsByTemplate(
+    user.id,
+    editionId,
+    templateId,
+    c.get('organizationId'),
+  );
+  if (!decision.allowed) {
+    return c.json(
+      { error: 'Forbidden' as const, reason: toPublicForbiddenReason(decision.reason) },
+      403,
     );
-    if (!decision.allowed) {
-      return c.json(
-        { error: 'Forbidden' as const, reason: toPublicForbiddenReason(decision.reason) },
-        403,
-      );
-    }
-  } else {
-    const canView = await canViewOtherSubmissions(user.id, editionId);
-    if (!canView) {
-      return c.json({ error: 'Forbidden' as const, reason: 'context_required' }, 403);
-    }
   }
 
   const whereClause = and(

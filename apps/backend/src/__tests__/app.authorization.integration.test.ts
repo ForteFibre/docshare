@@ -329,28 +329,46 @@ describe('authorization integration (app.request)', () => {
   it('sharing_status branch matrix: draft/accepting/sharing/closed', async () => {
     const app = createApp();
 
-    const draftRes = await app.request(`/api/editions/${statusEditionIds.draft}/submissions`, {
-      headers: { 'x-role': 'member' },
-    });
+    const draftRes = await app.request(
+      `/api/editions/${statusEditionIds.draft}/submissions?templateId=20000000-0000-0000-0000-000000000001`,
+      {
+        headers: { 'x-role': 'member' },
+      },
+    );
     expect(draftRes.status).toBe(403);
 
     const acceptingRes = await app.request(
-      `/api/editions/${statusEditionIds.accepting}/submissions`,
+      `/api/editions/${statusEditionIds.accepting}/submissions?templateId=20000000-0000-0000-0000-000000000001`,
       {
         headers: { 'x-role': 'member' },
       },
     );
     expect(acceptingRes.status).toBe(403);
 
-    const sharingRes = await app.request(`/api/editions/${statusEditionIds.sharing}/submissions`, {
-      headers: { 'x-role': 'member' },
-    });
+    const sharingRes = await app.request(
+      `/api/editions/${statusEditionIds.sharing}/submissions?templateId=20000000-0000-0000-0000-000000000001`,
+      {
+        headers: { 'x-role': 'member' },
+      },
+    );
     expect(sharingRes.status).toBe(200);
 
-    const closedRes = await app.request(`/api/editions/${statusEditionIds.closed}/submissions`, {
-      headers: { 'x-role': 'member' },
-    });
+    const closedRes = await app.request(
+      `/api/editions/${statusEditionIds.closed}/submissions?templateId=20000000-0000-0000-0000-000000000001`,
+      {
+        headers: { 'x-role': 'member' },
+      },
+    );
     expect(closedRes.status).toBe(200);
+
+    const missingTemplateRes = await app.request(
+      `/api/editions/${statusEditionIds.sharing}/submissions`,
+      {
+        headers: { 'x-role': 'member' },
+      },
+    );
+    expect(missingTemplateRes.status).toBe(400);
+    expect(mockCanViewOtherSubmissions).not.toHaveBeenCalled();
 
     const matrixDraftRes = await app.request(
       `/api/editions/${statusEditionIds.draft}/submission-matrix`,
@@ -606,7 +624,7 @@ describe('authorization integration (app.request)', () => {
         headers: { 'x-role': 'member', 'x-organization-id': 'org-1' },
       },
       {
-        path: `/api/editions/${statusEditionIds.sharing}/submissions`,
+        path: `/api/editions/${statusEditionIds.sharing}/submissions?templateId=20000000-0000-0000-0000-000000000001`,
         headers: { 'x-role': 'member' },
       },
       {
@@ -644,7 +662,8 @@ describe('authorization integration (app.request)', () => {
     ] as const;
 
     for (const testCase of cases) {
-      const res = await app.request(`${testCase.path}?sort=invalid:asc`, {
+      const separator = testCase.path.includes('?') ? '&' : '?';
+      const res = await app.request(`${testCase.path}${separator}sort=invalid:asc`, {
         headers: testCase.headers,
       });
       expect(res.status, `${testCase.path} should return 422 for invalid sort`).toBe(422);
@@ -671,7 +690,7 @@ describe('authorization integration (app.request)', () => {
         headers: { 'x-role': 'member', 'x-organization-id': 'org-1' },
       },
       {
-        path: `/api/editions/${statusEditionIds.sharing}/submissions`,
+        path: `/api/editions/${statusEditionIds.sharing}/submissions?templateId=20000000-0000-0000-0000-000000000001`,
         headers: { 'x-role': 'member' },
       },
       {
@@ -709,7 +728,8 @@ describe('authorization integration (app.request)', () => {
     ] as const;
 
     for (const testCase of cases) {
-      const res = await app.request(`${testCase.path}?page=0&pageSize=101`, {
+      const separator = testCase.path.includes('?') ? '&' : '?';
+      const res = await app.request(`${testCase.path}${separator}page=0&pageSize=101`, {
         headers: testCase.headers,
       });
       expect(res.status, `${testCase.path} should return 400 for invalid paging`).toBe(400);
