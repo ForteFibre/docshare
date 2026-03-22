@@ -12,14 +12,14 @@ describe('team detail navigation', () => {
     expect(href).toBe('/editions/ed-1/teams/part-1?templateId=tpl-1');
   });
 
-  it('templateId がない場合は query を付与しない', () => {
+  it('templateId は URL エンコードして query を付与する', () => {
     const href = buildTeamDetailHref({
       editionId: 'ed-1',
       participationId: 'part-1',
-      templateId: null,
+      templateId: 'tpl id',
     });
 
-    expect(href).toBe('/editions/ed-1/teams/part-1');
+    expect(href).toBe('/editions/ed-1/teams/part-1?templateId=tpl%20id');
   });
 
   it('template context の有無判定', () => {

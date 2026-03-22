@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getSubmissionDenyReasonLabel } from './submission-visibility';
+import { getDenyReasonLabel, getSubmissionDenyReasonLabel } from './submission-visibility';
 
 describe('submission visibility messaging', () => {
   it('提出済みだが閲覧不可で denyReason=context_required の文言を返す', () => {
@@ -48,5 +48,10 @@ describe('submission visibility messaging', () => {
         denyReason: 'access_denied',
       }),
     ).toBeNull();
+  });
+
+  it('公開 reason コード以外はフォールバック文言になる', () => {
+    expect(getDenyReasonLabel('organization_context_required', 'fallback')).toBe('fallback');
+    expect(getDenyReasonLabel('template_not_submitted', 'fallback')).toBe('fallback');
   });
 });

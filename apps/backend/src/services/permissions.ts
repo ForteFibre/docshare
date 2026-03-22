@@ -52,54 +52,6 @@ export const getUserUniversityIds = async (userId: string): Promise<string[]> =>
   return rows.map((row) => row.organizationId);
 };
 
-export const hasAnySubmission = async (
-  universityId: string,
-  editionId: string,
-): Promise<boolean> => {
-  const result = await db
-    .select({ value: sql<number>`count(*)` })
-    .from(participations)
-    .innerJoin(submissions, eq(submissions.participationId, participations.id))
-    .where(
-      and(eq(participations.universityId, universityId), eq(participations.editionId, editionId)),
-    );
-
-  return Number(result[0]?.value ?? 0) > 0;
-};
-
-export const canViewOtherSubmissions = async (
-  userId: string,
-  editionId: string,
-): Promise<boolean> => {
-  if (await isAdmin(userId)) {
-    return true;
-  }
-
-  const editionRows = await db
-    .select({ sharingStatus: competitionEditions.sharingStatus })
-    .from(competitionEditions)
-    .where(eq(competitionEditions.id, editionId))
-    .limit(1);
-
-  const sharingStatus = editionRows[0]?.sharingStatus;
-  if (!sharingStatus || !['sharing', 'closed'].includes(sharingStatus)) {
-    return false;
-  }
-
-  const universityIds = await getUserUniversityIds(userId);
-  if (universityIds.length === 0) {
-    return false;
-  }
-
-  for (const universityId of universityIds) {
-    if (await hasAnySubmission(universityId, editionId)) {
-      return true;
-    }
-  }
-
-  return false;
-};
-
 export const canViewOtherSubmissionsByTemplate = async (
   userId: string,
   editionId: string,

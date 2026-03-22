@@ -241,10 +241,6 @@ const mockCanDeleteSubmission = vi.fn(async (userId: string) => {
   return userId === 'admin-user' || userId === 'owner-user';
 });
 
-const mockCanViewOtherSubmissions = vi.fn(async (_userId: string, editionId: string) => {
-  return editionId === statusEditionIds.sharing || editionId === statusEditionIds.closed;
-});
-
 const mockCanViewOtherSubmissionsByTemplate = vi.fn(
   async (_userId: string, editionId: string, templateId: string) => {
     if (editionId === statusEditionIds.draft || editionId === statusEditionIds.accepting) {
@@ -261,7 +257,6 @@ const mockCanViewOtherSubmissionsByTemplate = vi.fn(
 
 vi.mock('../services/permissions.js', () => ({
   canDeleteSubmission: mockCanDeleteSubmission,
-  canViewOtherSubmissions: mockCanViewOtherSubmissions,
   canViewOtherSubmissionsByTemplate: mockCanViewOtherSubmissionsByTemplate,
   canViewParticipation: vi.fn(async () => true),
   canViewParticipationWithReason: vi.fn(async () => ({ allowed: true as const })),
@@ -368,7 +363,6 @@ describe('authorization integration (app.request)', () => {
       },
     );
     expect(missingTemplateRes.status).toBe(400);
-    expect(mockCanViewOtherSubmissions).not.toHaveBeenCalled();
 
     const matrixDraftRes = await app.request(
       `/api/editions/${statusEditionIds.draft}/submission-matrix`,

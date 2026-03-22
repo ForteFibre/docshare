@@ -124,7 +124,6 @@ vi.mock('../middleware/admin.js', () => ({
 }));
 
 const mockCanViewParticipation = vi.fn(async () => true);
-const mockCanViewOtherSubmissions = vi.fn(async () => true);
 const mockCanViewOtherSubmissionsByTemplate = vi.fn(async () => ({ allowed: true as const }));
 const mockCanViewParticipationWithReason = vi.fn(async () => ({ allowed: true as const }));
 const mockGetObjectMetadata = vi.fn(async () => ({
@@ -138,7 +137,6 @@ const mockPresignDownload = vi.fn(async (_bucket: string, key: string) => ({
 
 vi.mock('../services/permissions.js', () => ({
   canDeleteSubmission: vi.fn(async () => true),
-  canViewOtherSubmissions: mockCanViewOtherSubmissions,
   canViewOtherSubmissionsByTemplate: mockCanViewOtherSubmissionsByTemplate,
   canViewParticipation: mockCanViewParticipation,
   canViewParticipationWithReason: mockCanViewParticipationWithReason,
@@ -756,7 +754,6 @@ describe('issue #11 api integration', () => {
       '20000000-0000-0000-0000-000000000001',
       'org-1',
     );
-    expect(mockCanViewOtherSubmissions).not.toHaveBeenCalled();
   });
 
   it('GET /api/editions/:id/submissions returns 400 when templateId is missing', async () => {
@@ -773,7 +770,6 @@ describe('issue #11 api integration', () => {
     const body = (await res.json()) as { error?: unknown };
     expect(body.error).toBeDefined();
     expect(mockCanViewOtherSubmissionsByTemplate).not.toHaveBeenCalled();
-    expect(mockCanViewOtherSubmissions).not.toHaveBeenCalled();
   });
 
   it('GET /api/submissions/:id/history returns submittedByUser with id and name', async () => {

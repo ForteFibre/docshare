@@ -1,13 +1,9 @@
 export function buildTeamDetailHref(params: {
   editionId: string;
   participationId: string;
-  templateId: string | null | undefined;
+  templateId: string;
 }): string {
   const basePath = `/editions/${params.editionId}/teams/${params.participationId}`;
-  if (!params.templateId) {
-    return basePath;
-  }
-
   return `${basePath}?templateId=${encodeURIComponent(params.templateId)}`;
 }
 
