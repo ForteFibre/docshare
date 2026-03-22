@@ -103,4 +103,71 @@ describe('SubmissionMatrixCell', () => {
 
     expect(document.activeElement).toBe(reasonElement);
   });
+
+  it('submission が null の複数ロックセルでも理由テキスト id が衝突しない', () => {
+    render(
+      <>
+        <SubmissionMatrixCell
+          cell={buildCell({
+            viewable: false,
+            denyReason: 'context_required',
+            submission: null,
+          })}
+        />
+        <SubmissionMatrixCell
+          cell={buildCell({
+            viewable: false,
+            denyReason: 'context_required',
+            submission: null,
+          })}
+        />
+      </>,
+    );
+
+    const reasonButtons = screen.getAllByRole('button', { name: '閲覧不可理由' });
+    expect(reasonButtons).toHaveLength(2);
+
+    const firstReasonId = reasonButtons[0].getAttribute('aria-describedby');
+    const secondReasonId = reasonButtons[1].getAttribute('aria-describedby');
+
+    expect(firstReasonId).toBeTruthy();
+    expect(secondReasonId).toBeTruthy();
+    expect(firstReasonId).not.toBe(secondReasonId);
+
+    expect(document.getElementById(firstReasonId ?? '')).toBeTruthy();
+    expect(document.getElementById(secondReasonId ?? '')).toBeTruthy();
+  });
+
+  it('row/column context を渡した場合も aria-describedby 参照先が一意', () => {
+    render(
+      <>
+        <SubmissionMatrixCell
+          cell={buildCell({
+            viewable: false,
+            denyReason: 'context_required',
+            submission: null,
+          })}
+          rowKey='team-a'
+          columnKey='desktop-tpl-1'
+        />
+        <SubmissionMatrixCell
+          cell={buildCell({
+            viewable: false,
+            denyReason: 'context_required',
+            submission: null,
+          })}
+          rowKey='team-b'
+          columnKey='desktop-tpl-1'
+        />
+      </>,
+    );
+
+    const reasonButtons = screen.getAllByRole('button', { name: '閲覧不可理由' });
+    const firstReasonId = reasonButtons[0].getAttribute('aria-describedby');
+    const secondReasonId = reasonButtons[1].getAttribute('aria-describedby');
+
+    expect(firstReasonId).toBeTruthy();
+    expect(secondReasonId).toBeTruthy();
+    expect(firstReasonId).not.toBe(secondReasonId);
+  });
 });

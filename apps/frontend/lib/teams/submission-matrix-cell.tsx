@@ -5,6 +5,7 @@ import {
   getSubmissionDenyReasonLabel,
 } from '@/lib/teams/submission-visibility';
 import { Download, ExternalLink, Lock } from 'lucide-react';
+import { useId } from 'react';
 
 type SubmissionSummary = {
   id: string;
@@ -21,21 +22,58 @@ export type SubmissionMatrixCellData = {
   submission: SubmissionSummary | null;
 };
 
+const sanitizeIdPart = (value: string): string => value.replace(/[^a-zA-Z0-9_-]/g, '-');
+
+const buildDenyReasonId = ({
+  instanceId,
+  rowKey,
+  columnKey,
+  submissionId,
+}: {
+  instanceId: string;
+  rowKey?: string;
+  columnKey?: string;
+  submissionId?: string | null;
+}): string => {
+  const parts = [
+    'submission-deny-reason',
+    `instance-${instanceId}`,
+    submissionId ? `submission-${submissionId}` : null,
+    rowKey ? `row-${rowKey}` : null,
+    columnKey ? `col-${columnKey}` : null,
+  ]
+    .filter((part): part is string => Boolean(part))
+    .map(sanitizeIdPart);
+
+  return parts.join('-');
+};
+
 export function SubmissionMatrixCell({
   cell,
   downloadingSubmissionId,
   onDownload,
+  rowKey,
+  columnKey,
 }: {
   cell: SubmissionMatrixCellData | null | undefined;
   downloadingSubmissionId?: string | null;
   onDownload?: (submissionId: string) => void;
+  rowKey?: string;
+  columnKey?: string;
 }) {
+  const instanceId = useId();
+
   if (!cell?.submitted) {
     return <span className='text-muted-foreground'>—</span>;
   }
 
   if (!cell.viewable || !cell.submission) {
-    const reasonId = `submission-deny-reason-${cell.submission?.id ?? 'unknown'}`;
+    const reasonId = buildDenyReasonId({
+      instanceId,
+      rowKey,
+      columnKey,
+      submissionId: cell.submission?.id,
+    });
     const reason = getSubmissionDenyReasonLabel({
       submitted: cell.submitted,
       viewable: cell.viewable,
