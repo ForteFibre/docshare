@@ -29,5 +29,5 @@ export const getSubmissionDenyReasonLabel = ({
     return null;
   }
 
-  return getDenyReasonLabel(denyReason, '条件未達のため閲覧不可');
+  return getDenyReasonLabel(denyReason, denyReasonLabels.access_denied);
 };

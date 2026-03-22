@@ -22,14 +22,14 @@ describe('submission visibility messaging', () => {
     expect(text).toBe('権限不足のため閲覧できません');
   });
 
-  it('提出済みだが閲覧不可で denyReason 不明ならフォールバック文言を返す', () => {
+  it('提出済みだが閲覧不可で denyReason 不明なら access_denied 相当の文言を返す', () => {
     const text = getSubmissionDenyReasonLabel({
       submitted: true,
       viewable: false,
       denyReason: null,
     });
 
-    expect(text).toBe('条件未達のため閲覧不可');
+    expect(text).toBe('権限不足のため閲覧できません');
   });
 
   it('未提出または閲覧可能なら null を返す', () => {

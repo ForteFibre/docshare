@@ -8,6 +8,11 @@ import { useOrganization } from '@/contexts/OrganizationContext';
 import { ApiError, apiClient, throwIfError } from '@/lib/api/client';
 import type { paths } from '@/lib/api/schema';
 import { queryKeys } from '@/lib/query/keys';
+import { buildTeamDetailHref } from '@/lib/teams/navigation';
+import {
+  getDenyReasonLabel,
+  getSubmissionDenyReasonLabel,
+} from '@/lib/teams/submission-visibility';
 import { useQuery } from '@tanstack/react-query';
 import { Download, ExternalLink, Lock } from 'lucide-react';
 import Link from 'next/link';
@@ -17,15 +22,6 @@ import { use, useState } from 'react';
 type SubmissionMatrixData =
   paths['/api/editions/{id}/submission-matrix']['get']['responses'][200]['content']['application/json'];
 type SubmissionCell = SubmissionMatrixData['rows'][number]['cells'][number];
-
-const denyReasonLabels: Record<string, string> = {
-  organization_context_required: '所属大学の選択が必要です',
-  sharing_status_not_viewable: '共有期間外のため閲覧できません',
-  organization_not_participating: '選択中大学が未出場のため閲覧できません',
-  template_not_submitted: '選択中大学が未提出の資料種別です',
-  template_context_required: '資料種別を指定して閲覧してください',
-  participation_not_found: '対象チームが見つかりません',
-};
 
 const matrixSortValues = [
   'createdAt:asc',
@@ -80,6 +76,7 @@ export default function SubmissionsListPage({ params }: { params: Promise<{ id: 
   });
 
   const matrix = data as SubmissionMatrixData | undefined;
+  const teamDetailTemplateId = matrix?.templates[0]?.id;
 
   const handleDownload = async (submissionId: string) => {
     if (!organizationId) {
@@ -107,8 +104,11 @@ export default function SubmissionsListPage({ params }: { params: Promise<{ id: 
     }
 
     if (!cell.viewable || !cell.submission) {
-      const reason =
-        (cell.denyReason ? denyReasonLabels[cell.denyReason] : null) ?? '条件未達のため閲覧不可';
+      const reason = getSubmissionDenyReasonLabel({
+        submitted: cell.submitted,
+        viewable: cell.viewable,
+        denyReason: cell.denyReason,
+      });
 
       return (
         <output
@@ -119,7 +119,9 @@ export default function SubmissionsListPage({ params }: { params: Promise<{ id: 
             <Lock className='h-3.5 w-3.5' aria-hidden='true' />
             閲覧不可
           </p>
-          <p className='mt-1'>{reason}</p>
+          <p className='mt-1'>
+            {reason ?? getDenyReasonLabel('access_denied', '権限不足のため閲覧できません')}
+          </p>
         </output>
       );
     }
@@ -163,14 +165,14 @@ export default function SubmissionsListPage({ params }: { params: Promise<{ id: 
   };
 
   if (error instanceof ApiError && error.status === 403) {
-    const reason =
+    const apiReason =
       typeof error.body === 'object' &&
       error.body !== null &&
       'reason' in error.body &&
       typeof (error.body as { reason?: unknown }).reason === 'string'
-        ? (denyReasonLabels[(error.body as { reason: string }).reason] ??
-          '権限不足のため閲覧できません')
-        : '権限不足のため閲覧できません';
+        ? (error.body as { reason: string }).reason
+        : null;
+    const reason = getDenyReasonLabel(apiReason, '権限不足のため閲覧できません');
 
     return (
       <div className='space-y-4'>
@@ -253,12 +255,22 @@ export default function SubmissionsListPage({ params }: { params: Promise<{ id: 
                     <p className='text-xs text-muted-foreground'>
                       {row.participation.universityName}
                     </p>
-                    <Link
-                      href={`/editions/${id}/teams/${row.participation.id}`}
-                      className='text-primary hover:underline font-medium'
-                    >
-                      {row.participation.teamName ?? '(チーム名なし)'}
-                    </Link>
+                    {teamDetailTemplateId ? (
+                      <Link
+                        href={buildTeamDetailHref({
+                          editionId: id,
+                          participationId: row.participation.id,
+                          templateId: teamDetailTemplateId,
+                        })}
+                        className='text-primary hover:underline font-medium'
+                      >
+                        {row.participation.teamName ?? '(チーム名なし)'}
+                      </Link>
+                    ) : (
+                      <span className='font-medium'>
+                        {row.participation.teamName ?? '(チーム名なし)'}
+                      </span>
+                    )}
                   </th>
                   {row.cells.map((cell, index) => {
                     const template = matrix.templates[index];
@@ -295,18 +307,28 @@ export default function SubmissionsListPage({ params }: { params: Promise<{ id: 
             <div key={row.participation.id} className='border rounded-lg p-4 space-y-3'>
               <div>
                 <p className='text-xs text-muted-foreground'>{row.participation.universityName}</p>
-                <Link
-                  href={`/editions/${id}/teams/${row.participation.id}`}
-                  className='text-primary hover:underline font-medium'
-                >
-                  {row.participation.teamName ?? '(チーム名なし)'}
-                </Link>
+                {teamDetailTemplateId ? (
+                  <Link
+                    href={buildTeamDetailHref({
+                      editionId: id,
+                      participationId: row.participation.id,
+                      templateId: teamDetailTemplateId,
+                    })}
+                    className='text-primary hover:underline font-medium'
+                  >
+                    {row.participation.teamName ?? '(チーム名なし)'}
+                  </Link>
+                ) : (
+                  <span className='font-medium'>
+                    {row.participation.teamName ?? '(チーム名なし)'}
+                  </span>
+                )}
               </div>
               <div className='space-y-3'>
                 {(matrix.templates ?? []).map((template, index) => (
                   <div key={`${row.participation.id}:${template.id}`} className='space-y-1'>
                     <p className='text-xs text-muted-foreground'>{template.name}</p>
-                    {renderCell(row.cells[index])}
+                    {renderCell(row.cells[index] ?? null)}
                   </div>
                 ))}
               </div>
@@ -360,21 +382,21 @@ export default function SubmissionsListPage({ params }: { params: Promise<{ id: 
               ))}
             </select>
             <Button
-              size='sm'
               variant='outline'
-              onClick={() => setQueryParams({ page: Math.max(1, queryParams.page - 1) })}
+              size='sm'
               disabled={!matrix.pagination.hasPrev}
+              onClick={() => setQueryParams({ page: queryParams.page - 1 })}
             >
               前へ
             </Button>
-            <span className='text-sm'>
-              {matrix.pagination.page} / {Math.max(matrix.pagination.totalPages, 1)}
+            <span className='text-sm text-muted-foreground min-w-20 text-center'>
+              {matrix.pagination.page} / {matrix.pagination.totalPages}
             </span>
             <Button
-              size='sm'
               variant='outline'
-              onClick={() => setQueryParams({ page: queryParams.page + 1 })}
+              size='sm'
               disabled={!matrix.pagination.hasNext}
+              onClick={() => setQueryParams({ page: queryParams.page + 1 })}
             >
               次へ
             </Button>
