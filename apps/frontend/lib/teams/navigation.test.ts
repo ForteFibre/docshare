@@ -28,19 +28,51 @@ describe('team detail navigation', () => {
     expect(hasTemplateContext(undefined)).toBe(false);
   });
 
-  it('閲覧可能セルが複数ある場合は左から最初の templateId を選ぶ', () => {
+  it('submitted && viewable のセルが複数ある場合は左から最初の templateId を選ぶ', () => {
     const templateId = selectViewableTemplateId({
       templates: [{ id: 'tpl-1' }, { id: 'tpl-2' }, { id: 'tpl-3' }],
-      cells: [{ viewable: false }, { viewable: true }, { viewable: true }],
+      cells: [
+        { submitted: false, viewable: true },
+        { submitted: true, viewable: true },
+        { submitted: true, viewable: true },
+      ],
     });
 
     expect(templateId).toBe('tpl-2');
   });
 
-  it('全セル閲覧不可なら null を返す', () => {
+  it('viewable=true かつ submitted=false のみなら null を返す', () => {
     const templateId = selectViewableTemplateId({
       templates: [{ id: 'tpl-1' }, { id: 'tpl-2' }],
-      cells: [{ viewable: false }, { viewable: false }],
+      cells: [
+        { submitted: false, viewable: true },
+        { submitted: false, viewable: false },
+      ],
+    });
+
+    expect(templateId).toBeNull();
+  });
+
+  it('先行する viewable のみセルをスキップし後続の submitted && viewable を選ぶ', () => {
+    const templateId = selectViewableTemplateId({
+      templates: [{ id: 'tpl-1' }, { id: 'tpl-2' }, { id: 'tpl-3' }],
+      cells: [
+        { submitted: false, viewable: true },
+        { submitted: false, viewable: false },
+        { submitted: true, viewable: true },
+      ],
+    });
+
+    expect(templateId).toBe('tpl-3');
+  });
+
+  it('全セルが submitted && viewable を満たさないなら null を返す', () => {
+    const templateId = selectViewableTemplateId({
+      templates: [{ id: 'tpl-1' }, { id: 'tpl-2' }],
+      cells: [
+        { submitted: true, viewable: false },
+        { submitted: false, viewable: false },
+      ],
     });
 
     expect(templateId).toBeNull();
@@ -49,7 +81,10 @@ describe('team detail navigation', () => {
   it('template と cell の長さが不一致でも安全に判定する', () => {
     const templateId = selectViewableTemplateId({
       templates: [{ id: 'tpl-1' }],
-      cells: [{ viewable: false }, { viewable: true }],
+      cells: [
+        { submitted: false, viewable: false },
+        { submitted: true, viewable: true },
+      ],
     });
 
     expect(templateId).toBeNull();

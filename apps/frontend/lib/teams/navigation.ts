@@ -13,10 +13,10 @@ export function hasTemplateContext(templateId: string | null | undefined): boole
 
 export function selectViewableTemplateId(params: {
   templates: ReadonlyArray<{ id: string }>;
-  cells: ReadonlyArray<{ viewable: boolean } | null | undefined>;
+  cells: ReadonlyArray<{ submitted: boolean; viewable: boolean } | null | undefined>;
 }): string | null {
   for (const [index, cell] of params.cells.entries()) {
-    if (!cell?.viewable) {
+    if (!cell?.submitted || !cell.viewable) {
       continue;
     }
 
@@ -26,5 +26,6 @@ export function selectViewableTemplateId(params: {
     }
   }
 
+  // No submitted-and-viewable template exists, so the caller should not link to detail.
   return null;
 }
