@@ -51,7 +51,7 @@ export default function CompetitionsPage() {
   };
 
   const toggleSeries = (id: string) => {
-    setExpandedSeries((prev) => ({ ...prev, [id]: !prev[id] }));
+    setExpandedSeries((prev) => ({ ...prev, [id]: !(prev[id] ?? true) }));
   };
 
   return (
@@ -77,7 +77,7 @@ export default function CompetitionsPage() {
         <div className='space-y-3'>
           {(data?.data ?? []).map((series) => {
             const editions = (allEditions?.data ?? []).filter((e) => e.seriesId === series.id);
-            const isExpanded = expandedSeries[series.id];
+            const isExpanded = expandedSeries[series.id] ?? true;
 
             return (
               <Card key={series.id}>
