@@ -93,7 +93,7 @@ export default function AccountSettingsPage() {
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
                   {field.state.meta.errors[0] && (
-                    <p className='text-sm text-destructive'>{String(field.state.meta.errors[0])}</p>
+                    <p className='text-sm text-destructive'>{field.state.meta.errors[0].message}</p>
                   )}
                 </div>
               )}
@@ -134,7 +134,7 @@ export default function AccountSettingsPage() {
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
                   {field.state.meta.errors[0] && (
-                    <p className='text-sm text-destructive'>{String(field.state.meta.errors[0])}</p>
+                    <p className='text-sm text-destructive'>{field.state.meta.errors[0].message}</p>
                   )}
                 </div>
               )}
@@ -158,7 +158,7 @@ export default function AccountSettingsPage() {
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
                   {field.state.meta.errors[0] && (
-                    <p className='text-sm text-destructive'>{String(field.state.meta.errors[0])}</p>
+                    <p className='text-sm text-destructive'>{field.state.meta.errors[0].message}</p>
                   )}
                 </div>
               )}
@@ -169,7 +169,7 @@ export default function AccountSettingsPage() {
                 onChangeListenTo: ['newPassword'],
                 onChange: ({ value, fieldApi }) => {
                   if (value !== fieldApi.form.getFieldValue('newPassword')) {
-                    return 'パスワードが一致しません';
+                    return { message: 'パスワードが一致しません' };
                   }
                   return undefined;
                 },
@@ -188,7 +188,7 @@ export default function AccountSettingsPage() {
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
                   {field.state.meta.errors[0] && (
-                    <p className='text-sm text-destructive'>{String(field.state.meta.errors[0])}</p>
+                    <p className='text-sm text-destructive'>{field.state.meta.errors[0].message}</p>
                   )}
                 </div>
               )}

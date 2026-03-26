@@ -68,7 +68,7 @@ export default function RegisterPage() {
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
                   {field.state.meta.errors[0] && (
-                    <p className='text-sm text-destructive'>{String(field.state.meta.errors[0])}</p>
+                    <p className='text-sm text-destructive'>{field.state.meta.errors[0].message}</p>
                   )}
                 </div>
               )}
@@ -91,7 +91,7 @@ export default function RegisterPage() {
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
                   {field.state.meta.errors[0] && (
-                    <p className='text-sm text-destructive'>{String(field.state.meta.errors[0])}</p>
+                    <p className='text-sm text-destructive'>{field.state.meta.errors[0].message}</p>
                   )}
                 </div>
               )}
@@ -115,7 +115,7 @@ export default function RegisterPage() {
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
                   {field.state.meta.errors[0] && (
-                    <p className='text-sm text-destructive'>{String(field.state.meta.errors[0])}</p>
+                    <p className='text-sm text-destructive'>{field.state.meta.errors[0].message}</p>
                   )}
                 </div>
               )}
@@ -126,7 +126,7 @@ export default function RegisterPage() {
                 onChangeListenTo: ['password'],
                 onChange: ({ value, fieldApi }) => {
                   if (value !== fieldApi.form.getFieldValue('password')) {
-                    return 'パスワードが一致しません';
+                    return { message: 'パスワードが一致しません' };
                   }
                   return undefined;
                 },
@@ -145,7 +145,7 @@ export default function RegisterPage() {
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
                   {field.state.meta.errors[0] && (
-                    <p className='text-sm text-destructive'>{String(field.state.meta.errors[0])}</p>
+                    <p className='text-sm text-destructive'>{field.state.meta.errors[0].message}</p>
                   )}
                 </div>
               )}

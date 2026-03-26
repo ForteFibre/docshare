@@ -160,7 +160,7 @@ function TemplateFormDialog({
                 onChange={(e) => field.handleChange(e.target.value)}
               />
               {field.state.meta.errors[0] && (
-                <p className='text-sm text-destructive'>{String(field.state.meta.errors[0])}</p>
+                <p className='text-sm text-destructive'>{field.state.meta.errors[0].message}</p>
               )}
             </div>
           )}

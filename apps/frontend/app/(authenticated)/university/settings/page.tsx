@@ -201,7 +201,7 @@ export default function UniversitySettingsPage() {
                     />
                     {field.state.meta.errors[0] && (
                       <p className='text-sm text-destructive'>
-                        {String(field.state.meta.errors[0])}
+                        {field.state.meta.errors[0].message}
                       </p>
                     )}
                   </div>
