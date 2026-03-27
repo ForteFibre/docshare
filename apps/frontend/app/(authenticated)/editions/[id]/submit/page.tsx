@@ -29,6 +29,16 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
   const queryClient = useQueryClient();
   const [selectedParticipationId, setSelectedParticipationId] = useState<string | null>(null);
 
+  const { data: editionData, isLoading: isEditionLoading } = useQuery({
+    queryKey: queryKeys.editions.detail(id),
+    queryFn: async () => {
+      const result = await apiClient.GET('/api/editions/{id}', {
+        params: { path: { id } },
+      });
+      return throwIfError(result);
+    },
+  });
+
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.editions.mySubmissionStatus(id, organizationId ?? ''),
     queryFn: async () => {
@@ -47,6 +57,7 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
   const templates = statusData?.templates ?? [];
   const items = statusData?.items ?? [];
   const sharingStatus = statusData?.edition?.sharingStatus;
+  const edition = editionData?.data;
 
   const activeParticipationId =
     participations.length === 1 ? (participations[0]?.id ?? null) : selectedParticipationId;
@@ -57,10 +68,11 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
     });
   };
 
-  if (isLoading) {
+  if (isLoading || isEditionLoading) {
     return (
       <div className='space-y-4'>
         <Skeleton className='h-8 w-48' />
+        <Skeleton className='h-5 w-72' />
         <Skeleton className='h-64 w-full' />
       </div>
     );
@@ -86,7 +98,15 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
   return (
     <div className='space-y-6'>
       <div className='flex items-center justify-between flex-wrap gap-3'>
-        <h1 className='text-xl font-bold'>資料提出</h1>
+        <div className='space-y-1'>
+          <h1 className='text-xl font-bold'>資料提出</h1>
+          {edition ? (
+            <p className='text-sm text-muted-foreground'>
+              対象大会回:{' '}
+              <span className='font-medium text-foreground'>{`${edition.year}年 ${edition.name}`}</span>
+            </p>
+          ) : null}
+        </div>
         {sharingStatus && <StatusBadge status={sharingStatus} />}
       </div>
 
