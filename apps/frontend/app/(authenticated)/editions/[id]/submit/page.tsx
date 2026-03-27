@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { ApiError, apiClient, throwIfError } from '@/lib/api/client';
@@ -50,7 +49,7 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
   const sharingStatus = statusData?.edition?.sharingStatus;
 
   const activeParticipationId =
-    selectedParticipationId ?? (participations.length > 0 ? participations[0].id : null);
+    participations.length === 1 ? (participations[0]?.id ?? null) : selectedParticipationId;
 
   const invalidateStatus = () => {
     queryClient.invalidateQueries({
@@ -97,31 +96,67 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
         </div>
       )}
 
-      {/* Team tabs */}
+      {/* Team selection */}
       {participations.length > 1 ? (
-        <Tabs value={activeParticipationId ?? ''} onValueChange={setSelectedParticipationId}>
-          <TabsList>
-            {participations.map((p) => (
-              <TabsTrigger key={p.id} value={p.id}>
-                {p.teamName ?? '(チーム名なし)'}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          {participations.map((p) => (
-            <TabsContent key={p.id} value={p.id}>
-              <TemplateList
-                editionId={id}
-                participationId={p.id}
-                templates={templates}
-                items={items.filter((i) => i.participationId === p.id)}
-                isClosed={isClosed}
-                canDelete={canDelete}
-                organizationId={organizationId}
-                onSuccess={invalidateStatus}
-              />
-            </TabsContent>
-          ))}
-        </Tabs>
+        <div className='space-y-4'>
+          <Card className='border-dashed'>
+            <CardHeader className='space-y-2'>
+              <CardTitle className='text-base'>提出先のチームを選択</CardTitle>
+              <p className='text-sm text-muted-foreground'>
+                複数の出場チームがあります。提出フォームを表示するには、先に提出先のチームを選んでください。
+              </p>
+            </CardHeader>
+            <CardContent className='space-y-3'>
+              {participations.map((p) => {
+                const optionId = `participation-${p.id}`;
+                const isSelected = selectedParticipationId === p.id;
+
+                return (
+                  <label
+                    key={p.id}
+                    htmlFor={optionId}
+                    className={`flex cursor-pointer items-start gap-3 rounded-lg border px-4 py-3 transition-colors ${
+                      isSelected
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/40 hover:bg-muted/40'
+                    }`}
+                  >
+                    <input
+                      id={optionId}
+                      type='radio'
+                      name='participation'
+                      value={p.id}
+                      checked={isSelected}
+                      onChange={() => setSelectedParticipationId(p.id)}
+                      className='mt-1 h-4 w-4 border-muted-foreground text-primary'
+                    />
+                    <div className='min-w-0'>
+                      <div className='font-medium'>{p.teamName ?? '(チーム名なし)'}</div>
+                    </div>
+                  </label>
+                );
+              })}
+            </CardContent>
+          </Card>
+
+          {activeParticipationId ? (
+            <TemplateList
+              editionId={id}
+              participationId={activeParticipationId}
+              templates={templates}
+              items={items.filter((i) => i.participationId === activeParticipationId)}
+              isClosed={isClosed}
+              canDelete={canDelete}
+              organizationId={organizationId}
+              onSuccess={invalidateStatus}
+            />
+          ) : (
+            <EmptyState
+              title='チームを選ぶと提出フォームが表示されます'
+              description='まず上のラジオボタンから提出先チームを選択してください。'
+            />
+          )}
+        </div>
       ) : activeParticipationId ? (
         <TemplateList
           editionId={id}
