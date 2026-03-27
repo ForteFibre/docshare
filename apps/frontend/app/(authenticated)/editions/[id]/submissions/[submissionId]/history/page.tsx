@@ -90,7 +90,7 @@ export default function SubmissionHistoryPage({
               href={url}
               target='_blank'
               rel='noopener noreferrer'
-              className='flex items-center gap-1 text-primary hover:underline px-3.5'
+              className='flex items-center gap-1 text-primary hover:underline px-3.5 py-1.5'
             >
               <ExternalLinkIcon className='h-3 w-3 mr-1' />
               開く
