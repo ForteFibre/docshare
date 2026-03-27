@@ -207,7 +207,7 @@ export default function TeamDetailPage({
               variant='ghost'
               size='sm'
               onClick={() => handleDownload(id)}
-              className='h-auto py-0 px-1'
+              className='flex items-center gap-1 text-primary cursor-pointer'
             >
               <DownloadIcon className='h-3 w-3 mr-1' />
               {fileName ?? 'ダウンロード'}
@@ -219,9 +219,9 @@ export default function TeamDetailPage({
             href={url}
             target='_blank'
             rel='noopener noreferrer'
-            className='flex items-center gap-1 text-primary hover:underline text-sm'
+            className='flex items-center gap-1 text-primary hover:underline px-3.5'
           >
-            <ExternalLinkIcon className='h-3 w-3' />
+            <ExternalLinkIcon className='h-3 w-3 mr-1' />
             開く
           </a>
         ) : (
