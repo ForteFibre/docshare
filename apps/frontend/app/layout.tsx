@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'ロボコン資料共有',
-  description: 'ロボコン出場チームの資料共有サービス',
+  title: '製本企画',
+  description: 'ロボコン出場チームがお互いに資料を共有し合うためのプラットフォーム',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

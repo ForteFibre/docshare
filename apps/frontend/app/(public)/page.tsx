@@ -15,7 +15,7 @@ export default function TopPage() {
       <section className='text-center space-y-6'>
         <h1 className='text-4xl font-bold tracking-tight'>製本企画</h1>
         <p className='text-xl text-muted-foreground max-w-2xl mx-auto'>
-          ロボコン参加チームが資料を安全に共有・管理できるプラットフォームです
+          資料を共有してロボコンをより強く、より楽しく。製本企画はロボコン出場チームがお互いに資料を共有し合うためのプラットフォームです。
         </p>
         <div className='flex gap-3 justify-center flex-wrap'>
           {!isLoading &&
