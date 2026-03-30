@@ -73,9 +73,9 @@ export default function AdminRequestsPage() {
           <div className='flex gap-2'>
             <ConfirmDialog
               trigger={
-                <button type='button' className='text-sm text-primary'>
+                <Button type='button' variant='default' size='sm'>
                   承認
-                </button>
+                </Button>
               }
               title='大学追加依頼を承認しますか？'
               description={`${row.original.universityName} を作成し、${row.original.representativeEmail} に招待を送ります。`}
@@ -84,9 +84,9 @@ export default function AdminRequestsPage() {
             />
             <ConfirmDialog
               trigger={
-                <button type='button' className='text-sm text-destructive'>
+                <Button type='button' variant='destructive' size='sm'>
                   却下
-                </button>
+                </Button>
               }
               title='大学追加依頼を却下しますか？'
               description='この申請は却下済みとして保存されます。'
@@ -137,7 +137,7 @@ export default function AdminRequestsPage() {
           <div className='flex gap-2'>
             <ConfirmDialog
               trigger={
-                <Button type='button' className='text-sm text-primary'>
+                <Button type='button' variant='default' size='sm'>
                   承認
                 </Button>
               }
@@ -148,7 +148,7 @@ export default function AdminRequestsPage() {
             />
             <ConfirmDialog
               trigger={
-                <Button type='button' className='text-sm text-destructive'>
+                <Button type='button' variant='destructive' size='sm'>
                   却下
                 </Button>
               }
