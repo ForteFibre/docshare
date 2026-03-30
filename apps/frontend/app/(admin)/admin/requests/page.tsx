@@ -5,6 +5,7 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { DataTable } from '@/components/common/DataTable';
 import { DateTimeDisplay } from '@/components/common/DateTimeDisplay';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   type ParticipationRequest,
@@ -130,9 +131,9 @@ export default function AdminRequestsPage() {
           <div className='flex gap-2'>
             <ConfirmDialog
               trigger={
-                <button type='button' className='text-sm text-primary'>
+                <Button type='button' className='text-sm text-primary'>
                   承認
-                </button>
+                </Button>
               }
               title='出場追加依頼を承認しますか？'
               description='承認するとこの大会回の出場登録が作成されます。'
@@ -141,9 +142,9 @@ export default function AdminRequestsPage() {
             />
             <ConfirmDialog
               trigger={
-                <button type='button' className='text-sm text-destructive'>
+                <Button type='button' className='text-sm text-destructive'>
                   却下
-                </button>
+                </Button>
               }
               title='出場追加依頼を却下しますか？'
               description='この申請は却下済みとして保存されます。'
@@ -168,7 +169,7 @@ export default function AdminRequestsPage() {
       </div>
 
       <Tabs defaultValue='university' className='space-y-4'>
-        <TabsList>
+        <TabsList variant='line'>
           <TabsTrigger value='university'>大学追加依頼</TabsTrigger>
           <TabsTrigger value='participation'>出場追加依頼</TabsTrigger>
         </TabsList>

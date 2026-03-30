@@ -8,6 +8,9 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function TopPage() {
   const { isAuthenticated, isLoading } = useAuth();
+  const universityRequestHref = isAuthenticated
+    ? '/university/request'
+    : '/auth/login?callbackUrl=%2Funiversity%2Frequest';
 
   return (
     <div className='container mx-auto px-4 py-16 space-y-16'>
@@ -36,6 +39,9 @@ export default function TopPage() {
             ))}
           <Button size='lg' variant='outline' render={<Link href='/competitions' />}>
             大会一覧を見る
+          </Button>
+          <Button size='lg' variant='outline' render={<Link href={universityRequestHref} />}>
+            大学追加を依頼する
           </Button>
         </div>
       </section>
