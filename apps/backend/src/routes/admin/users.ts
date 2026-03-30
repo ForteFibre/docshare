@@ -17,7 +17,7 @@ const userListItemSchema = z.object({
   name: z.string(),
   email: z.string().email(),
   isAdmin: z.boolean(),
-  createdAt: z.any(),
+  createdAt: z.date(),
   organizationCount: z.number(),
 });
 
@@ -27,7 +27,7 @@ const membershipSchema = z.object({
   organizationName: z.string(),
   organizationSlug: z.string(),
   role: z.enum(['owner', 'member']),
-  createdAt: z.any(),
+  createdAt: z.date(),
 });
 
 const createdMembershipSchema = z.object({
@@ -35,7 +35,7 @@ const createdMembershipSchema = z.object({
   userId: z.string(),
   organizationId: z.string(),
   role: z.enum(['owner', 'member']),
-  createdAt: z.any(),
+  createdAt: z.date(),
 });
 
 const listUserSortValues = [

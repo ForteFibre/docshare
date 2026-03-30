@@ -26,8 +26,7 @@ const templateSchema = z.object({
   maxFileSizeMb: z.number().int(),
   isRequired: z.boolean(),
   sortOrder: z.number().int(),
-  createdAt: z.any(),
-  updatedAt: z.any(),
+  createdAt: z.date(),
 });
 
 const createTemplateRoute = createRoute({

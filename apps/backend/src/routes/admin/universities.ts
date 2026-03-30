@@ -22,8 +22,8 @@ const organizationSchema = z.object({
   id: z.string(),
   name: z.string(),
   slug: z.string(),
-  createdAt: z.any(),
-  updatedAt: z.any(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
 const listUniversitySortValues = [

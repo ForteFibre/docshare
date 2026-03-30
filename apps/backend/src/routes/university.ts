@@ -99,8 +99,8 @@ const invitationSchema = z.object({
   email: z.string().email(),
   role: z.enum(['owner', 'member']),
   inviterId: z.string(),
-  expiresAt: z.any(),
-  createdAt: z.any(),
+  expiresAt: z.date(),
+  createdAt: z.date(),
 });
 
 const inviteUniversityRoute = createRoute({

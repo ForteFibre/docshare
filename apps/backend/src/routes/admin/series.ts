@@ -15,8 +15,8 @@ const seriesSchema = z.object({
   name: z.string(),
   description: z.string().nullable(),
   externalLinks: z.array(z.object({ label: z.string(), url: z.string().url() })).nullable(),
-  createdAt: z.any(),
-  updatedAt: z.any(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
 const createSeriesRoute = createRoute({

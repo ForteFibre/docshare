@@ -112,7 +112,7 @@ const editionSubmissionRowSchema = z.object({
     universityId: z.string(),
     universityName: z.string(),
     teamName: z.string().nullable(),
-    createdAt: z.any(),
+    createdAt: z.date(),
   }),
 });
 
@@ -130,7 +130,7 @@ const submissionMatrixRowSchema = z.object({
     universityId: z.string(),
     universityName: z.string(),
     teamName: z.string().nullable(),
-    createdAt: z.any(),
+    createdAt: z.date(),
   }),
   cells: z.array(
     z.discriminatedUnion('state', [
@@ -161,7 +161,7 @@ const historySchema = z.object({
   fileSizeBytes: z.number().nullable(),
   fileMimeType: z.string().nullable(),
   url: z.string().nullable(),
-  createdAt: z.any(),
+  createdAt: z.date(),
 });
 
 const listEditionSubmissionSortValues = [
