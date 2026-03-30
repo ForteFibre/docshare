@@ -1,5 +1,8 @@
 'use client';
 
+import type { ColumnDef } from '@tanstack/react-table';
+import { CheckIcon, CopyIcon, PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
+import { use, useState } from 'react';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { DataTable } from '@/components/common/DataTable';
 import { Badge } from '@/components/ui/badge';
@@ -19,16 +22,13 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { TemplateFormDialog } from '@/features/admin/templates/TemplateFormDialog';
 import {
   useCopyTemplatesMutation,
   useDeleteTemplateMutation,
 } from '@/features/admin/templates/mutations';
 import { useAdminTemplates, useEditionsForTemplateCopy } from '@/features/admin/templates/query';
+import { TemplateFormDialog } from '@/features/admin/templates/TemplateFormDialog';
 import type { Template } from '@/features/admin/templates/types';
-import type { ColumnDef } from '@tanstack/react-table';
-import { CheckIcon, CopyIcon, PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
-import { use, useState } from 'react';
 
 export default function AdminTemplatesPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: editionId } = use(params);

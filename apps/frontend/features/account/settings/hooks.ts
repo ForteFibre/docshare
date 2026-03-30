@@ -1,9 +1,9 @@
-import { useAuth, useInvalidateMe } from '@/contexts/AuthContext';
-import { authClient } from '@/lib/auth/client';
 import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { useAuth, useInvalidateMe } from '@/contexts/AuthContext';
+import { authClient } from '@/lib/auth/client';
 
 export function useAccountSettingsForms() {
   const { user } = useAuth();

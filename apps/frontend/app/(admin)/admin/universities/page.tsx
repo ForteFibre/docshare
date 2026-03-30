@@ -1,5 +1,8 @@
 'use client';
 
+import type { ColumnDef } from '@tanstack/react-table';
+import { PlusIcon } from 'lucide-react';
+import { useState } from 'react';
 import { DataTable } from '@/components/common/DataTable';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,9 +18,6 @@ import {
   useAdminUniversitiesList,
   useCreateUniversityForm,
 } from '@/features/admin/universities/hooks';
-import type { ColumnDef } from '@tanstack/react-table';
-import { PlusIcon } from 'lucide-react';
-import { useState } from 'react';
 
 function CreateUniversityDialog({ onClose }: { onClose: () => void }) {
   const { form, mutation, validators } = useCreateUniversityForm(onClose);

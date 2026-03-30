@@ -1,12 +1,12 @@
 'use client';
 
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { use, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth, useInvalidateMe } from '@/contexts/AuthContext';
 import { authClient } from '@/lib/auth/client';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { use, useState } from 'react';
 
 export default function InvitePage({ params }: { params: Promise<{ invitationId: string }> }) {
   const { invitationId } = use(params);

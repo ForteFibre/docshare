@@ -1,3 +1,5 @@
+import { useForm } from '@tanstack/react-form';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -10,8 +12,6 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { useForm } from '@tanstack/react-form';
-import { z } from 'zod';
 import { useUpsertTemplateMutation } from './mutations';
 import type { Template, TemplateAcceptType } from './types';
 

@@ -1,4 +1,4 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
 import { eq } from 'drizzle-orm';
 import { db } from '../../db/index.js';
 import { competitionEditions } from '../../db/schema.js';

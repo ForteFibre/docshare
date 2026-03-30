@@ -1,8 +1,8 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { ApiError, apiClient, throwIfError } from '@/lib/api/client';
 import { invalidateAdminTemplatesQueries } from '@/lib/query/invalidation';
 import { getApiErrorMessage } from '@/lib/utils/errors';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import type { Template, TemplateFormValues } from './types';
 
 export function useUpsertTemplateMutation(

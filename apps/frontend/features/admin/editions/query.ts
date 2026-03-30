@@ -1,6 +1,6 @@
+import { useQuery } from '@tanstack/react-query';
 import { apiClient, throwIfError } from '@/lib/api/client';
 import { queryKeys } from '@/lib/query/keys';
-import { useQuery } from '@tanstack/react-query';
 import type { AdminEditionsQueryParams } from './types';
 
 export function useAdminEditionsList(queryParams: AdminEditionsQueryParams) {

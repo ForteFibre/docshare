@@ -1,5 +1,9 @@
 'use client';
 
+import { ChevronDownIcon, ChevronRightIcon, ExternalLinkIcon } from 'lucide-react';
+import Link from 'next/link';
+import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
+import { useState } from 'react';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,10 +13,6 @@ import {
   useCompetitionsEditions,
   useCompetitionsSeries,
 } from '@/features/public/competitions/query';
-import { ChevronDownIcon, ChevronRightIcon, ExternalLinkIcon } from 'lucide-react';
-import Link from 'next/link';
-import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
-import { useState } from 'react';
 
 const paginationParsers = {
   page: parseAsInteger.withDefault(1),

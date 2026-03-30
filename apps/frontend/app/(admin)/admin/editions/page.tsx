@@ -1,5 +1,17 @@
 'use client';
 
+import type { ColumnDef } from '@tanstack/react-table';
+import {
+  LayoutListIcon,
+  PencilIcon,
+  PlusIcon,
+  Trash2Icon,
+  UploadIcon,
+  UsersIcon,
+} from 'lucide-react';
+import Link from 'next/link';
+import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
+import { useRef, useState } from 'react';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { DataTable } from '@/components/common/DataTable';
 import { Button } from '@/components/ui/button';
@@ -19,20 +31,8 @@ import {
   useUploadEditionRuleMutation,
 } from '@/features/admin/editions/mutations';
 import { useAdminEditionsList } from '@/features/admin/editions/query';
-import { SHARING_STATUS_LABELS } from '@/features/admin/editions/types';
 import type { Edition, SharingStatus } from '@/features/admin/editions/types';
-import type { ColumnDef } from '@tanstack/react-table';
-import {
-  LayoutListIcon,
-  PencilIcon,
-  PlusIcon,
-  Trash2Icon,
-  UploadIcon,
-  UsersIcon,
-} from 'lucide-react';
-import Link from 'next/link';
-import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
-import { useRef, useState } from 'react';
+import { SHARING_STATUS_LABELS } from '@/features/admin/editions/types';
 
 const paginationParsers = {
   page: parseAsInteger.withDefault(1),

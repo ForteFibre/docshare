@@ -1,11 +1,11 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
 import { and, eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import {
   competitionEditions,
   participations,
-  submissionTemplates,
   submissions,
+  submissionTemplates,
 } from '../db/schema.js';
 import { env } from '../lib/config.js';
 import type { AppVariables } from '../middleware/auth.js';

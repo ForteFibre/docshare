@@ -1,7 +1,7 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
 import { asc, count, desc, eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { organizations, participations, submissionTemplates, submissions } from '../db/schema.js';
+import { organizations, participations, submissions, submissionTemplates } from '../db/schema.js';
 import {
   createPaginatedResponseSchema,
   createPaginationMeta,
@@ -17,7 +17,7 @@ const participationSchema = z.object({
   universityId: z.string(),
   universityName: z.string(),
   teamName: z.string().nullable(),
-  createdAt: z.any(),
+  createdAt: z.date(),
 });
 
 const participationSubmissionSchema = z.object({
@@ -30,7 +30,7 @@ const participationSubmissionSchema = z.object({
   version: z.number().int(),
   fileName: z.string().nullable(),
   url: z.string().nullable(),
-  updatedAt: z.any(),
+  updatedAt: z.date(),
 });
 
 const participationSubmissionListItemSchema = z.discriminatedUnion('state', [
@@ -45,7 +45,7 @@ const participationSubmissionListItemSchema = z.discriminatedUnion('state', [
       name: z.string(),
       acceptType: z.enum(['file', 'url']),
     }),
-    updatedAt: z.any(),
+    updatedAt: z.date(),
   }),
 ]);
 

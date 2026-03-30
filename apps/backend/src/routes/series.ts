@@ -1,4 +1,4 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
 import { asc, count, desc, eq, ilike, or } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { competitionSeries } from '../db/schema.js';
@@ -14,8 +14,8 @@ const seriesSchema = z.object({
   name: z.string(),
   description: z.string().nullable(),
   externalLinks: z.array(z.object({ label: z.string(), url: z.string().url() })).nullable(),
-  createdAt: z.any(),
-  updatedAt: z.any(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
 const notFoundSchema = z.object({ error: z.literal('Not found') });

@@ -1,12 +1,12 @@
 'use client';
 
+import Link from 'next/link';
 import { EmptyState } from '@/components/common/EmptyState';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/features/dashboard/query';
-import Link from 'next/link';
 
 export default function DashboardPage() {
   const { organizationId, currentOrg, myEditions, isLoading } = useDashboardData();

@@ -1,5 +1,9 @@
 'use client';
 
+import type { ColumnDef } from '@tanstack/react-table';
+import { DownloadIcon, ExternalLinkIcon } from 'lucide-react';
+import { parseAsInteger, useQueryStates } from 'nuqs';
+import { use } from 'react';
 import { DataTable } from '@/components/common/DataTable';
 import { DateTimeDisplay } from '@/components/common/DateTimeDisplay';
 import { Button } from '@/components/ui/button';
@@ -9,10 +13,6 @@ import {
   useSubmissionHistory,
 } from '@/features/editions/submission-history/hooks';
 import { apiClient, throwIfError } from '@/lib/api/client';
-import type { ColumnDef } from '@tanstack/react-table';
-import { DownloadIcon, ExternalLinkIcon } from 'lucide-react';
-import { parseAsInteger, useQueryStates } from 'nuqs';
-import { use } from 'react';
 
 const paginationParsers = {
   page: parseAsInteger.withDefault(1),

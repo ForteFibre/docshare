@@ -1,11 +1,11 @@
 'use client';
 
-import { Header } from '@/components/layout/Header';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { Header } from '@/components/layout/Header';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/contexts/AuthContext';
 
 const adminNavLinks = [
   { href: '/admin', label: '管理ダッシュボード' },
@@ -20,7 +20,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && (!user || !user.isAdmin)) {
+    if (!isLoading && !user?.isAdmin) {
       router.replace('/dashboard');
     }
   }, [user, isLoading, router]);

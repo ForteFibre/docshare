@@ -1,4 +1,4 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
 import { and, asc, count, desc, eq, ilike, inArray, or } from 'drizzle-orm';
 import { HTTPException } from 'hono/http-exception';
 import { db } from '../db/index.js';
@@ -7,8 +7,8 @@ import {
   organizations,
   participations,
   submissionHistories,
-  submissionTemplates,
   submissions,
+  submissionTemplates,
   users,
 } from '../db/schema.js';
 import { env } from '../lib/config.js';
@@ -60,8 +60,8 @@ const submissionSchema = z.object({
   fileSizeBytes: z.number().nullable(),
   fileMimeType: z.string().nullable(),
   url: z.string().nullable(),
-  createdAt: z.any(),
-  updatedAt: z.any(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
 const createSubmissionRoute = createRoute({

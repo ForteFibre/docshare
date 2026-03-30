@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+import { use } from 'react';
 import { EmptyState } from '@/components/common/EmptyState';
 import { EditionOverview } from '@/components/editions/EditionOverview';
 import { EditionSubmissionMatrix } from '@/components/editions/EditionSubmissionMatrix';
@@ -8,8 +10,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCompetitionDetail } from '@/features/public/competition-detail/query';
-import Link from 'next/link';
-import { use } from 'react';
 
 export default function EditionDetailPage({ params }: { params: Promise<{ editionId: string }> }) {
   const { editionId } = use(params);

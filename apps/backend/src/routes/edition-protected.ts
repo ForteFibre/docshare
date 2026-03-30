@@ -1,12 +1,12 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
 import { and, asc, count, desc, eq, ilike, inArray, or } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import {
   competitionEditions,
   organizations,
   participations,
-  submissionTemplates,
   submissions,
+  submissionTemplates,
 } from '../db/schema.js';
 import {
   createPaginatedResponseSchema,
@@ -37,7 +37,7 @@ const templateSchema = z.object({
   maxFileSizeMb: z.number().int(),
   isRequired: z.boolean(),
   sortOrder: z.number().int(),
-  createdAt: z.any(),
+  createdAt: z.date(),
 });
 
 const mySubmissionSchema = z.object({
@@ -50,8 +50,8 @@ const mySubmissionSchema = z.object({
   fileSizeBytes: z.number().nullable(),
   fileMimeType: z.string().nullable(),
   url: z.string().nullable(),
-  createdAt: z.any(),
-  updatedAt: z.any(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
 const templateSortValues = [
@@ -158,7 +158,7 @@ const myParticipationSchema = z.object({
   universityId: z.string(),
   universityName: z.string(),
   teamName: z.string().nullable(),
-  createdAt: z.any(),
+  createdAt: z.date(),
 });
 
 const listMyParticipationsRoute = createRoute({
@@ -240,7 +240,7 @@ const mySubmissionStatusRoute = createRoute({
                       version: z.number().int(),
                       fileName: z.string().nullable(),
                       url: z.string().nullable(),
-                      updatedAt: z.any(),
+                      updatedAt: z.date(),
                     })
                     .nullable(),
                 }),

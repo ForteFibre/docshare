@@ -19,8 +19,8 @@ export const editionResponseSchema = z.object({
   ruleDocuments: z.array(ruleDocumentResponseSchema).nullable(),
   sharingStatus: z.enum(['draft', 'accepting', 'sharing', 'closed']),
   externalLinks: z.array(z.object({ label: z.string(), url: z.string().url() })).nullable(),
-  createdAt: z.any(),
-  updatedAt: z.any(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
 type EditionRecord = typeof competitionEditions.$inferSelect;

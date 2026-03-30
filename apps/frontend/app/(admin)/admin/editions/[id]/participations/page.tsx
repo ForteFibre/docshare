@@ -1,5 +1,8 @@
 'use client';
 
+import type { ColumnDef } from '@tanstack/react-table';
+import { CheckIcon, PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
+import { use } from 'react';
 import { UniversitySelect } from '@/components/admin/UniversitySelect';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { DataTable } from '@/components/common/DataTable';
@@ -9,15 +12,8 @@ import {
   type Participation,
   useAdminParticipationsPage,
 } from '@/features/admin/participations/hooks';
-import type { ColumnDef } from '@tanstack/react-table';
-import { CheckIcon, PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
-import { use } from 'react';
 
-export default function AdminParticipationsPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function AdminParticipationsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: editionId } = use(params);
   const {
     selectedUniversityId,

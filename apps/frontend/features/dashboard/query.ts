@@ -1,7 +1,7 @@
+import { useQueries, useQuery } from '@tanstack/react-query';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { apiClient, throwIfError } from '@/lib/api/client';
 import { queryKeys } from '@/lib/query/keys';
-import { useQueries, useQuery } from '@tanstack/react-query';
 
 export function useDashboardData() {
   const { organizationId, currentOrg } = useOrganization();

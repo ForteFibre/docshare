@@ -1,5 +1,5 @@
 import { swaggerUI } from '@hono/swagger-ui';
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
 import { cors } from 'hono/cors';
 import { auth } from './auth.js';
 import { env } from './lib/config.js';

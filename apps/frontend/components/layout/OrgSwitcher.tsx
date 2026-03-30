@@ -1,5 +1,6 @@
 'use client';
 
+import { Building2Icon, ChevronDownIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,7 +13,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrganization } from '@/contexts/OrganizationContext';
-import { Building2Icon, ChevronDownIcon } from 'lucide-react';
 
 export function OrgSwitcher() {
   const { organizations } = useAuth();

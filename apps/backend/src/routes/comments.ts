@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
 import { and, asc, count, desc, eq, ilike, isNull } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { comments, organizations, participations, users } from '../db/schema.js';
@@ -29,9 +29,9 @@ const commentSchema = z.object({
   authorUniversityName: z.string().nullable(),
   authorTeamName: z.string().nullable(),
   body: z.string(),
-  createdAt: z.any(),
-  updatedAt: z.any(),
-  deletedAt: z.any().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  deletedAt: z.date().nullable(),
 });
 
 const commentWithAuthorSchema = z.object({
@@ -39,8 +39,8 @@ const commentWithAuthorSchema = z.object({
   participationId: z.string().uuid(),
   editionId: z.string().uuid(),
   body: z.string(),
-  createdAt: z.any(),
-  updatedAt: z.any(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
   author: z.object({
     id: z.string(),
     name: z.string(),

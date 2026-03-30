@@ -1,11 +1,11 @@
-import { Button } from '@/components/ui/button';
-import { DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { useForm } from '@tanstack/react-form';
 import { PlusIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
 import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import { DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { useUpsertSeriesMutation } from './mutations';
 import type { ExternalLink, Series } from './types';
 

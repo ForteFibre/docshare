@@ -1,7 +1,7 @@
+import { useQuery } from '@tanstack/react-query';
 import { apiClient, throwIfError } from '@/lib/api/client';
 import type { paths } from '@/lib/api/schema';
 import { queryKeys } from '@/lib/query/keys';
-import { useQuery } from '@tanstack/react-query';
 
 type SubmissionHistoryPath = paths['/api/submissions/{id}/history'];
 export type SubmissionHistoryResponse =

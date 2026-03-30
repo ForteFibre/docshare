@@ -1,11 +1,11 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { useAuth, useInvalidateMe } from '@/contexts/AuthContext';
-import { authClient } from '@/lib/auth/client';
 import { LogOutIcon, SettingsIcon, ShieldIcon } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { useAuth, useInvalidateMe } from '@/contexts/AuthContext';
+import { authClient } from '@/lib/auth/client';
 import { OrgSwitcher } from './OrgSwitcher';
 
 export function Header() {

@@ -1,19 +1,19 @@
 'use client';
 
+import type { ColumnDef } from '@tanstack/react-table';
+import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
+import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
+import { useState } from 'react';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { DataTable } from '@/components/common/DataTable';
 import { DateTimeDisplay } from '@/components/common/DateTimeDisplay';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { SeriesFormDialog } from '@/features/admin/series/SeriesFormDialog';
 import { useDeleteSeriesMutation } from '@/features/admin/series/mutations';
 import { useAdminSeriesList } from '@/features/admin/series/query';
+import { SeriesFormDialog } from '@/features/admin/series/SeriesFormDialog';
 import type { Series } from '@/features/admin/series/types';
-import type { ColumnDef } from '@tanstack/react-table';
-import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
-import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
-import { useState } from 'react';
 
 const paginationParsers = {
   page: parseAsInteger.withDefault(1),

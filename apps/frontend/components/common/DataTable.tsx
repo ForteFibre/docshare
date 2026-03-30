@@ -1,5 +1,6 @@
 'use client';
 
+import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -9,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { EmptyState } from './EmptyState';
 import type { PaginationState } from './PaginationControls';
 import { PaginationControls } from './PaginationControls';

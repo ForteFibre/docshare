@@ -6,8 +6,8 @@ import {
   members,
   participations,
   submissionHistories,
-  submissionTemplates,
   submissions,
+  submissionTemplates,
   users,
 } from '../db/schema.js';
 

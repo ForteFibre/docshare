@@ -1,8 +1,9 @@
 import type { components } from '../api/schema';
 
-export type SharingStatus = components['schemas'] extends Record<string, unknown>
-  ? never
-  : 'draft' | 'accepting' | 'sharing' | 'closed';
+export type SharingStatus =
+  components['schemas'] extends Record<string, unknown>
+    ? never
+    : 'draft' | 'accepting' | 'sharing' | 'closed';
 
 export const SHARING_STATUS_LABELS: Record<string, string> = {
   draft: '準備中',

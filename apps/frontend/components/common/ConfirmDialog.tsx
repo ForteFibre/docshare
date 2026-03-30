@@ -1,5 +1,6 @@
 'use client';
 
+import type React from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,7 +12,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import type React from 'react';
 
 interface ConfirmDialogProps {
   trigger: React.ReactElement;

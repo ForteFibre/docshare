@@ -1,5 +1,6 @@
 'use client';
 
+import type { ColumnDef } from '@tanstack/react-table';
 import { type UniversityOption, UniversitySelect } from '@/components/admin/UniversitySelect';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { DataTable } from '@/components/common/DataTable';
@@ -20,7 +21,6 @@ import {
   useAdminUsersPageState,
   useMembershipDialog,
 } from '@/features/admin/users/hooks';
-import type { ColumnDef } from '@tanstack/react-table';
 
 function MembershipDialog({
   user,

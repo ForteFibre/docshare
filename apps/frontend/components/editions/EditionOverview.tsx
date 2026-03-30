@@ -1,10 +1,10 @@
 'use client';
 
+import { ExternalLinkIcon, FileTextIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { paths } from '@/lib/api/schema';
-import { ExternalLinkIcon, FileTextIcon } from 'lucide-react';
-import type { ReactNode } from 'react';
 
 type EditionDetail =
   paths['/api/editions/{id}']['get']['responses'][200]['content']['application/json']['data'];

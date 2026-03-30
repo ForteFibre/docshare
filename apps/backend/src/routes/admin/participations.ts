@@ -1,4 +1,4 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
 import { asc, count, desc, eq } from 'drizzle-orm';
 import { db } from '../../db/index.js';
 import { organizations, participations } from '../../db/schema.js';
@@ -25,7 +25,7 @@ const participationWithUniversitySchema = z.object({
   universityId: z.string(),
   universityName: z.string(),
   teamName: z.string().nullable(),
-  createdAt: z.any(),
+  createdAt: z.date(),
 });
 
 const participationSchema = z.object({
@@ -33,8 +33,7 @@ const participationSchema = z.object({
   editionId: z.string().uuid(),
   universityId: z.string(),
   teamName: z.string().nullable(),
-  createdAt: z.any(),
-  updatedAt: z.any(),
+  createdAt: z.date(),
 });
 
 const listEditionParticipationSortValues = [

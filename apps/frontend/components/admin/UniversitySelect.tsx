@@ -1,5 +1,8 @@
 'use client';
 
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { CheckIcon, Loader2Icon } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Command,
@@ -13,9 +16,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { apiClient, throwIfError } from '@/lib/api/client';
 import { queryKeys } from '@/lib/query/keys';
 import { cn } from '@/lib/utils';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { CheckIcon, Loader2Icon } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
 
 const UNIVERSITY_PAGE_SIZE = 100;
 

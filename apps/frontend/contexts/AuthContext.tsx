@@ -1,9 +1,9 @@
 'use client';
 
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { createContext, type ReactNode, useContext, useMemo } from 'react';
 import { apiClient, throwIfError } from '@/lib/api/client';
 import { queryKeys } from '@/lib/query/keys';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { type ReactNode, createContext, useContext, useMemo } from 'react';
 
 export interface AuthUser {
   id: string;

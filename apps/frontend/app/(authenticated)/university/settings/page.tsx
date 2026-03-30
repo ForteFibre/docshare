@@ -1,5 +1,6 @@
 'use client';
 
+import type { ColumnDef } from '@tanstack/react-table';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { DataTable } from '@/components/common/DataTable';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +16,6 @@ import {
 } from '@/components/ui/select';
 import { type Member, useUniversitySettingsPage } from '@/features/university/settings/hooks';
 import { ROLE_LABELS } from '@/lib/utils/status';
-import type { ColumnDef } from '@tanstack/react-table';
 
 export default function UniversitySettingsPage() {
   const {

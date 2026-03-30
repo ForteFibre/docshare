@@ -1,11 +1,11 @@
 'use client';
 
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useRegisterForm } from '@/features/public/auth/register/hooks';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 export default function RegisterPage() {
   const router = useRouter();

@@ -1,5 +1,8 @@
 'use client';
 
+import { ExternalLinkIcon, HistoryIcon, Trash2Icon, UploadIcon } from 'lucide-react';
+import Link from 'next/link';
+import { use, useRef, useState } from 'react';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { DateTimeDisplay } from '@/components/common/DateTimeDisplay';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -16,9 +19,6 @@ import {
   useSubmitPageData,
   useTemplateSubmissionMutations,
 } from '@/features/editions/submit/hooks';
-import { ExternalLinkIcon, HistoryIcon, Trash2Icon, UploadIcon } from 'lucide-react';
-import Link from 'next/link';
-import { use, useRef, useState } from 'react';
 
 export default function SubmitPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);

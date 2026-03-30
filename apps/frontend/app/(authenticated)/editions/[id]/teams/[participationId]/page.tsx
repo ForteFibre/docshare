@@ -1,5 +1,9 @@
 'use client';
 
+import type { ColumnDef } from '@tanstack/react-table';
+import { DownloadIcon, ExternalLinkIcon, LockIcon, PencilIcon, Trash2Icon } from 'lucide-react';
+import { parseAsInteger, useQueryStates } from 'nuqs';
+import { use, useState } from 'react';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { DataTable } from '@/components/common/DataTable';
 import { DateTimeDisplay } from '@/components/common/DateTimeDisplay';
@@ -15,10 +19,6 @@ import {
 } from '@/features/editions/team-detail/hooks';
 import { ApiError } from '@/lib/api/client';
 import type { paths } from '@/lib/api/schema';
-import type { ColumnDef } from '@tanstack/react-table';
-import { DownloadIcon, ExternalLinkIcon, LockIcon, PencilIcon, Trash2Icon } from 'lucide-react';
-import { parseAsInteger, useQueryStates } from 'nuqs';
-import { use, useState } from 'react';
 
 const paginationParsers = {
   page: parseAsInteger.withDefault(1),
