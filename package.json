@@ -3,7 +3,7 @@
   "private": true,
   "packageManager": "pnpm@10.0.0",
   "scripts": {
-    "dev": "pnpm --filter \"./apps/*\" dev",
+    "dev": "dotenv -- pnpm --filter \"./apps/*\" dev",
     "build": "pnpm --filter \"./apps/*\" build",
     "generate:api": "pnpm --filter backend openapi:generate && pnpm --filter frontend generate:api",
     "check": "biome check .",
@@ -19,5 +19,8 @@
     "@types/node": "^25.5.0",
     "typescript": "^6.0.2",
     "vitest": "^4.1.2"
+  },
+  "dependencies": {
+    "dotenv-cli": "^11.0.0"
   }
 }
