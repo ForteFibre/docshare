@@ -2,19 +2,21 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { authClient } from '@/lib/auth/client';
+import { invalidateOrganizationSwitchQueries } from '@/lib/query/invalidation';
 import { type AuthOrganization, useAuth } from './AuthContext';
-
-const ORG_STORAGE_KEY = 'docshare_org_id';
 
 interface OrgContextValue {
   organizationId: string | null;
-  setOrganizationId: (id: string) => void;
+  setOrganizationId: (id: string) => Promise<boolean>;
+  isSwitchingOrganization: boolean;
   currentOrg: AuthOrganization | null;
 }
 
 const OrgContext = createContext<OrgContextValue>({
   organizationId: null,
-  setOrganizationId: () => {},
+  setOrganizationId: async () => false,
+  isSwitchingOrganization: false,
   currentOrg: null,
 });
 
@@ -22,40 +24,52 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   const { organizations, activeOrganizationId } = useAuth();
   const queryClient = useQueryClient();
   const [organizationId, setOrganizationIdState] = useState<string | null>(null);
+  const [isSwitchingOrganization, setIsSwitchingOrganization] = useState(false);
 
-  // Initialize: prefer server's activeOrganizationId, then localStorage, then first org
+  // Session active organization is the source of truth.
   useEffect(() => {
-    if (organizations.length === 0) return;
-
-    const stored = localStorage.getItem(ORG_STORAGE_KEY);
-    const validIds = organizations.map((o) => o.id);
-
-    let id: string | null = null;
-    if (activeOrganizationId && validIds.includes(activeOrganizationId)) {
-      id = activeOrganizationId;
-    } else if (stored && validIds.includes(stored)) {
-      id = stored;
-    } else if (organizations.length > 0) {
-      id = organizations[0].id;
+    if (organizations.length === 0) {
+      setOrganizationIdState(null);
+      return;
     }
 
-    setOrganizationIdState(id);
+    if (activeOrganizationId && organizations.some((org) => org.id === activeOrganizationId)) {
+      setOrganizationIdState(activeOrganizationId);
+      return;
+    }
+
+    setOrganizationIdState(null);
   }, [organizations, activeOrganizationId]);
 
   const setOrganizationId = useCallback(
-    (id: string) => {
-      const prev = organizationId;
-      setOrganizationIdState(id);
-      localStorage.setItem(ORG_STORAGE_KEY, id);
+    async (id: string): Promise<boolean> => {
+      if (!organizations.some((org) => org.id === id)) {
+        return false;
+      }
 
-      // Invalidate all org-scoped queries when switching
-      if (prev && prev !== id) {
-        queryClient.invalidateQueries({
-          predicate: (query) => query.queryKey.includes(prev),
-        });
+      if (id === activeOrganizationId) {
+        return true;
+      }
+
+      const prev = organizationId;
+      setIsSwitchingOrganization(true);
+      try {
+        const result = await authClient.organization.setActive({ organizationId: id });
+
+        if (result.error) {
+          return false;
+        }
+
+        setOrganizationIdState(id);
+        await invalidateOrganizationSwitchQueries(queryClient, prev, id);
+        return true;
+      } catch {
+        return false;
+      } finally {
+        setIsSwitchingOrganization(false);
       }
     },
-    [organizationId, queryClient],
+    [activeOrganizationId, organizationId, organizations, queryClient],
   );
 
   const currentOrg = useMemo(
@@ -64,8 +78,8 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   );
 
   const value = useMemo(
-    () => ({ organizationId, setOrganizationId, currentOrg }),
-    [organizationId, setOrganizationId, currentOrg],
+    () => ({ organizationId, setOrganizationId, isSwitchingOrganization, currentOrg }),
+    [organizationId, setOrganizationId, isSwitchingOrganization, currentOrg],
   );
 
   return <OrgContext.Provider value={value}>{children}</OrgContext.Provider>;

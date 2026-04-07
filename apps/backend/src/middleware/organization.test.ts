@@ -57,9 +57,10 @@ describe('resolveOrganization', () => {
     mockLimit.mockResolvedValue([]);
   });
 
-  it('ヘッダー未指定時にセッションactiveOrganizationを利用する', async () => {
+  it('セッションactiveOrganizationを優先して利用する', async () => {
     const c = createContext({
       user: { id: 'user-1', isAdmin: false },
+      headerOrganizationId: 'org-1',
       sessionActiveOrganizationId: 'org-1',
     });
     mockLimit.mockResolvedValue([{ id: 'm-1' }]);
@@ -67,6 +68,31 @@ describe('resolveOrganization', () => {
     await resolveOrganization(c as never, vi.fn(async () => undefined) as Next);
 
     expect(c.get('organizationId')).toBe('org-1');
+  });
+
+  it('互換層としてセッション未設定時はヘッダーを利用する', async () => {
+    const c = createContext({
+      user: { id: 'user-1', isAdmin: false },
+      headerOrganizationId: 'org-header',
+      sessionActiveOrganizationId: null,
+    });
+    mockLimit.mockResolvedValue([{ id: 'm-1' }]);
+
+    await resolveOrganization(c as never, vi.fn(async () => undefined) as Next);
+
+    expect(c.get('organizationId')).toBe('org-header');
+  });
+
+  it('セッションとヘッダーが不一致の場合は403', async () => {
+    const c = createContext({
+      user: { id: 'user-1', isAdmin: false },
+      headerOrganizationId: 'org-header',
+      sessionActiveOrganizationId: 'org-1',
+    });
+
+    await expect(
+      resolveOrganization(c as never, vi.fn(async () => undefined) as Next),
+    ).rejects.toBeInstanceOf(HTTPException);
   });
 
   it('所属していないorganization指定は403', async () => {

@@ -8,8 +8,21 @@ import type { AppVariables } from './auth.js';
 export const resolveOrganization: MiddlewareHandler<{
   Variables: AppVariables;
 }> = async (c, next) => {
-  const organizationId =
-    c.req.header('x-organization-id') ?? c.get('sessionActiveOrganizationId') ?? null;
+  const headerOrganizationId = c.req.header('x-organization-id') ?? null;
+  const sessionOrganizationId = c.get('sessionActiveOrganizationId') ?? null;
+
+  // Compatibility layer: reject mismatched header while preferring session active organization.
+  if (
+    headerOrganizationId &&
+    sessionOrganizationId &&
+    headerOrganizationId !== sessionOrganizationId
+  ) {
+    throw new HTTPException(403, {
+      message: 'Organization header does not match active session organization',
+    });
+  }
+
+  const organizationId = sessionOrganizationId ?? headerOrganizationId;
 
   if (organizationId) {
     const user = c.get('currentUser');
