@@ -35,7 +35,7 @@
       "!**/coverage",
       "!.vscode",
       "!**/.next",
-      "!next-env.d.ts"
+      "!**/next-env.d.ts"
     ]
   }
 }
