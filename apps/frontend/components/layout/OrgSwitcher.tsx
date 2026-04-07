@@ -16,7 +16,8 @@ import { useOrganization } from '@/contexts/OrganizationContext';
 
 export function OrgSwitcher() {
   const { organizations } = useAuth();
-  const { organizationId, setOrganizationId, currentOrg } = useOrganization();
+  const { organizationId, setOrganizationId, isSwitchingOrganization, currentOrg } =
+    useOrganization();
 
   if (organizations.length === 0) {
     return (
@@ -51,7 +52,10 @@ export function OrgSwitcher() {
         {organizations.map((org) => (
           <DropdownMenuItem
             key={org.id}
-            onClick={() => setOrganizationId(org.id)}
+            disabled={isSwitchingOrganization}
+            onClick={async () => {
+              await setOrganizationId(org.id);
+            }}
             className={org.id === organizationId ? 'font-semibold' : ''}
           >
             {org.name}

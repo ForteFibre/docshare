@@ -1,6 +1,43 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { queryKeys } from './keys';
 
+const ORG_SCOPED_QUERY_ROOTS = new Set(['editions', 'participations', 'submissions', 'university']);
+
+const isOrganizationScopedQuery = (
+  queryKey: ReadonlyArray<unknown>,
+  previousOrganizationId: string | null,
+  nextOrganizationId: string,
+): boolean => {
+  const root = queryKey[0];
+  if (typeof root !== 'string' || !ORG_SCOPED_QUERY_ROOTS.has(root)) {
+    return false;
+  }
+
+  if (queryKey.includes(nextOrganizationId)) {
+    return true;
+  }
+
+  if (previousOrganizationId && queryKey.includes(previousOrganizationId)) {
+    return true;
+  }
+
+  return false;
+};
+
+export async function invalidateOrganizationSwitchQueries(
+  queryClient: QueryClient,
+  previousOrganizationId: string | null,
+  nextOrganizationId: string,
+): Promise<void> {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: queryKeys.me }),
+    queryClient.invalidateQueries({
+      predicate: (query) =>
+        isOrganizationScopedQuery(query.queryKey, previousOrganizationId, nextOrganizationId),
+    }),
+  ]);
+}
+
 export async function invalidateAdminSeriesQueries(queryClient: QueryClient): Promise<void> {
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: queryKeys.admin.seriesPrefix() }),
