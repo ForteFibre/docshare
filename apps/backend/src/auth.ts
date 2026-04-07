@@ -11,6 +11,15 @@ export const auth = betterAuth({
     provider: 'pg',
     schema,
   }),
+  user: {
+    additionalFields: {
+      isAdmin: {
+        type: 'boolean',
+        default: false,
+        required: true,
+      },
+    },
+  },
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,
   trustedOrigins: env.CORS_ALLOWED_ORIGINS,

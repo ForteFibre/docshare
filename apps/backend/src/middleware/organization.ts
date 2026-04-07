@@ -9,7 +9,7 @@ export const resolveOrganization: MiddlewareHandler<{
   Variables: AppVariables;
 }> = async (c, next) => {
   const headerOrganizationId = c.req.header('x-organization-id') ?? null;
-  const sessionOrganizationId = c.get('sessionActiveOrganizationId') ?? null;
+  const sessionOrganizationId = c.get('session')?.activeOrganizationId ?? null;
 
   // Compatibility layer: reject mismatched header while preferring session active organization.
   if (
@@ -24,21 +24,21 @@ export const resolveOrganization: MiddlewareHandler<{
 
   const organizationId = sessionOrganizationId ?? headerOrganizationId;
 
-  if (organizationId) {
-    const user = c.get('currentUser');
-    if (!user.isAdmin) {
-      const row = await db
-        .select({ id: members.id })
-        .from(members)
-        .where(and(eq(members.userId, user.id), eq(members.organizationId, organizationId)))
-        .limit(1);
+  const user = c.get('currentUser');
+  const rows = await db
+    .select({ id: members.id })
+    .from(members)
+    .where(
+      organizationId
+        ? and(eq(members.userId, user.id), eq(members.organizationId, organizationId))
+        : eq(members.userId, user.id),
+    )
+    .limit(1);
 
-      if (!row[0]) {
-        throw new HTTPException(403, {
-          message: 'Invalid organization context',
-        });
-      }
-    }
+  if (rows.length === 0 && !user.isAdmin) {
+    throw new HTTPException(403, {
+      message: 'User does not belong to the organization',
+    });
   }
 
   c.set('organizationId', organizationId);

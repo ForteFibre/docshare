@@ -70,23 +70,14 @@ describe('requireAuth', () => {
     await expect(requireAuth(c as never, vi.fn() as Next)).rejects.toBeInstanceOf(HTTPException);
   });
 
-  it('有効セッション時にcurrentUserとactiveOrganizationを設定', async () => {
+  it('有効セッション時にcurrentUserを設定', async () => {
     const c = createContext({ cookie: 'better-auth.session_token=test' });
     const next = vi.fn(async () => undefined);
 
     mockGetSession.mockResolvedValue({
-      user: { id: 'user-1' },
+      user: { id: 'user-1', email: 'u@example.com', name: 'user', isAdmin: false },
       session: { activeOrganizationId: 'org-1' },
     });
-    mockLimit.mockResolvedValue([
-      {
-        id: 'user-1',
-        email: 'u@example.com',
-        name: 'user',
-        isAdmin: false,
-      },
-    ]);
-
     await requireAuth(c as never, next as Next);
 
     expect(next).toHaveBeenCalledTimes(1);
@@ -96,6 +87,5 @@ describe('requireAuth', () => {
       name: 'user',
       isAdmin: false,
     });
-    expect(c.get('sessionActiveOrganizationId')).toBe('org-1');
   });
 });
