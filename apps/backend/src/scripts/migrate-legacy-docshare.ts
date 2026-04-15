@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { createReadStream, existsSync } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
 import { basename, dirname, extname, join, resolve } from 'node:path';
@@ -109,17 +109,6 @@ const s3 = new S3Client({
   },
 });
 
-const deterministicUuid = (value: string): string => {
-  const hash = createHash('sha1').update(value).digest('hex');
-  return [
-    hash.slice(0, 8),
-    hash.slice(8, 12),
-    `5${hash.slice(13, 16)}`,
-    ((Number.parseInt(hash.slice(16, 18), 16) & 0x3f) | 0x80).toString(16) + hash.slice(18, 20),
-    hash.slice(20, 32),
-  ].join('-');
-};
-
 const normalizeSlug = (value: string, fallback: string): string => {
   const normalized = value
     .toLowerCase()
@@ -144,6 +133,15 @@ const parseInteger = (value: string | undefined): number => {
     throw new Error(`Invalid integer value: ${value ?? '<missing>'}`);
   }
   return parsed;
+};
+
+const requireMapValue = <Key, Value>(map: Map<Key, Value>, key: Key, label: string): Value => {
+  const value = map.get(key);
+  if (!value) {
+    throw new Error(`${label} is missing for ${String(key)}.`);
+  }
+
+  return value;
 };
 
 const extractInsertStatements = (sql: string, table: string): string[] => {
@@ -408,7 +406,6 @@ const run = async (): Promise<void> => {
   const skipFiles = process.argv.includes('--skip-files');
   const data = await parseLegacyData();
   const emailByLegacyUser = createEmailByLegacyUser(data.users);
-  const seriesId = deterministicUuid('legacy:series:nhk-student-robocon');
   const client = dryRun ? null : await getDbClient();
   const documentsByParticipation = new Map<string, LegacyDocument[]>();
 
@@ -436,6 +433,23 @@ const run = async (): Promise<void> => {
     throw new Error('Database client was not created.');
   }
 
+  const seriesId = randomUUID();
+  const editionIdByCompetition = new Map(
+    data.competitions.map((competition) => [competition.id, randomUUID()]),
+  );
+  const userIdByLegacyUser = new Map(data.users.map((user) => [user.id, randomUUID()]));
+  const organizationIdByLegacyUser = new Map(data.users.map((user) => [user.id, randomUUID()]));
+  const templateIdByCompetitionAndField = new Map<string, string>();
+  const participationIdByKey = new Map(
+    [...documentsByParticipation.keys()].map((key) => [key, randomUUID()]),
+  );
+
+  for (const competition of data.competitions) {
+    for (const template of templates) {
+      templateIdByCompetitionAndField.set(`${competition.id}:${template.key}`, randomUUID());
+    }
+  }
+
   try {
     await client.query('BEGIN');
 
@@ -443,11 +457,6 @@ const run = async (): Promise<void> => {
       `
         INSERT INTO competition_series (id, name, description, external_links)
         VALUES ($1, $2, $3, $4)
-        ON CONFLICT (id) DO UPDATE SET
-          name = EXCLUDED.name,
-          description = EXCLUDED.description,
-          external_links = EXCLUDED.external_links,
-          updated_at = now()
       `,
       [
         seriesId,
@@ -458,18 +467,15 @@ const run = async (): Promise<void> => {
     );
 
     for (const competition of data.competitions) {
-      const editionId = deterministicUuid(`legacy:edition:${competition.id}`);
+      const editionId = requireMapValue(
+        editionIdByCompetition,
+        competition.id,
+        'Competition edition ID',
+      );
       await client.query(
         `
           INSERT INTO competition_edition (id, series_id, year, name, description, sharing_status)
           VALUES ($1, $2, $3, $4, $5, 'sharing')
-          ON CONFLICT (id) DO UPDATE SET
-            series_id = EXCLUDED.series_id,
-            year = EXCLUDED.year,
-            name = EXCLUDED.name,
-            description = EXCLUDED.description,
-            sharing_status = EXCLUDED.sharing_status,
-            updated_at = now()
         `,
         [
           editionId,
@@ -481,6 +487,12 @@ const run = async (): Promise<void> => {
       );
 
       for (const template of templates) {
+        const templateId = requireMapValue(
+          templateIdByCompetitionAndField,
+          `${competition.id}:${template.key}`,
+          'Submission template ID',
+        );
+
         await client.query(
           `
             INSERT INTO submission_template (
@@ -493,16 +505,9 @@ const run = async (): Promise<void> => {
               max_file_size_mb
             )
             VALUES ($1, $2, $3, $4, $5, $6, 1024)
-            ON CONFLICT (id) DO UPDATE SET
-              edition_id = EXCLUDED.edition_id,
-              name = EXCLUDED.name,
-              accept_type = EXCLUDED.accept_type,
-              allowed_extensions = EXCLUDED.allowed_extensions,
-              sort_order = EXCLUDED.sort_order,
-              max_file_size_mb = EXCLUDED.max_file_size_mb
           `,
           [
-            deterministicUuid(`legacy:template:${competition.id}:${template.key}`),
+            templateId,
             editionId,
             template.name,
             template.acceptType,
@@ -514,8 +519,12 @@ const run = async (): Promise<void> => {
     }
 
     for (const user of data.users) {
-      const userId = `legacy-user-${user.id}`;
-      const organizationId = `legacy-org-${user.id}`;
+      const userId = requireMapValue(userIdByLegacyUser, user.id, 'User ID');
+      const organizationId = requireMapValue(
+        organizationIdByLegacyUser,
+        user.id,
+        'Organization ID',
+      );
       const slug = normalizeSlug(user.username, `legacy-org-${user.id}`);
       const email = emailByLegacyUser.get(user.id);
 
@@ -527,11 +536,6 @@ const run = async (): Promise<void> => {
         `
           INSERT INTO "user" (id, email, name, email_verified, is_admin, created_at, updated_at)
           VALUES ($1, $2, $3, false, $4, $5, $5)
-          ON CONFLICT (id) DO UPDATE SET
-            email = EXCLUDED.email,
-            name = EXCLUDED.name,
-            is_admin = EXCLUDED.is_admin,
-            updated_at = now()
         `,
         [userId, email, user.name, user.isAdmin, user.createdAt],
       );
@@ -540,11 +544,6 @@ const run = async (): Promise<void> => {
         `
           INSERT INTO organization (id, name, slug, metadata)
           VALUES ($1, $2, $3, $4)
-          ON CONFLICT (id) DO UPDATE SET
-            name = EXCLUDED.name,
-            slug = EXCLUDED.slug,
-            metadata = EXCLUDED.metadata,
-            updated_at = now()
         `,
         [
           organizationId,
@@ -558,12 +557,8 @@ const run = async (): Promise<void> => {
         `
           INSERT INTO member (id, organization_id, user_id, role, created_at)
           VALUES ($1, $2, $3, 'owner', $4)
-          ON CONFLICT (id) DO UPDATE SET
-            organization_id = EXCLUDED.organization_id,
-            user_id = EXCLUDED.user_id,
-            role = EXCLUDED.role
         `,
-        [`legacy-member-${user.id}`, organizationId, userId, user.createdAt],
+        [randomUUID(), organizationId, userId, user.createdAt],
       );
 
       if (user.password && user.isActive) {
@@ -571,11 +566,8 @@ const run = async (): Promise<void> => {
           `
             INSERT INTO account (id, account_id, provider_id, user_id, password, created_at, updated_at)
             VALUES ($1, $2, 'credential', $2, $3, $4, $4)
-            ON CONFLICT (id) DO UPDATE SET
-              password = EXCLUDED.password,
-              updated_at = now()
           `,
-          [`legacy-account-${user.id}`, userId, user.password, user.createdAt],
+          [randomUUID(), userId, user.password, user.createdAt],
         );
       }
     }
@@ -584,19 +576,15 @@ const run = async (): Promise<void> => {
       const [competitionIdText, userIdText] = key.split(':');
       const competitionId = parseInteger(competitionIdText);
       const userId = parseInteger(userIdText);
-      const editionId = deterministicUuid(`legacy:edition:${competitionId}`);
-      const participationId = deterministicUuid(`legacy:participation:${competitionId}:${userId}`);
+      const editionId = requireMapValue(editionIdByCompetition, competitionId, 'Edition ID');
+      const participationId = requireMapValue(participationIdByKey, key, 'Participation ID');
       const user = data.users.find((candidate) => candidate.id === userId);
-      const organizationId = `legacy-org-${userId}`;
+      const organizationId = requireMapValue(organizationIdByLegacyUser, userId, 'Organization ID');
 
       await client.query(
         `
           INSERT INTO participation (id, edition_id, university_id, team_name)
           VALUES ($1, $2, $3, null)
-          ON CONFLICT (id) DO UPDATE SET
-            edition_id = EXCLUDED.edition_id,
-            university_id = EXCLUDED.university_id,
-            team_name = EXCLUDED.team_name
         `,
         [participationId, editionId, organizationId],
       );
@@ -611,11 +599,13 @@ const run = async (): Promise<void> => {
           continue;
         }
 
-        const templateId = deterministicUuid(`legacy:template:${competitionId}:${template.key}`);
-        const submissionId = deterministicUuid(
-          `legacy:submission:${competitionId}:${userId}:${template.key}`,
+        const templateId = requireMapValue(
+          templateIdByCompetitionAndField,
+          `${competitionId}:${template.key}`,
+          'Submission template ID',
         );
-        const submittedBy = `legacy-user-${userId}`;
+        const submissionId = randomUUID();
+        const submittedBy = requireMapValue(userIdByLegacyUser, userId, 'Submitted user ID');
         const latestVersion = revisions.length;
         const latest = revisions[revisions.length - 1];
 
@@ -657,14 +647,6 @@ const run = async (): Promise<void> => {
               url
             )
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-            ON CONFLICT (id) DO UPDATE SET
-              version = EXCLUDED.version,
-              file_s3_key = EXCLUDED.file_s3_key,
-              file_name = EXCLUDED.file_name,
-              file_size_bytes = EXCLUDED.file_size_bytes,
-              file_mime_type = EXCLUDED.file_mime_type,
-              url = EXCLUDED.url,
-              updated_at = now()
           `,
           [
             submissionId,
@@ -692,15 +674,12 @@ const run = async (): Promise<void> => {
                 url
               )
               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-              ON CONFLICT (id) DO NOTHING
             `,
             [
-              deterministicUuid(
-                `legacy:history:${competitionId}:${userId}:${template.key}:${revision.document.id}:${version}`,
-              ),
+              randomUUID(),
               submissionId,
               version,
-              user ? `legacy-user-${user.id}` : submittedBy,
+              user ? requireMapValue(userIdByLegacyUser, user.id, 'History user ID') : submittedBy,
               ...(await buildSubmissionPayload(revision.value)),
             ],
           );
