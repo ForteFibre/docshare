@@ -1,5 +1,5 @@
 .git
-.github/tmp
+.github
 .codex
 
 node_modules
@@ -25,6 +25,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+apps/*/pnpm-workspace.yaml
 *.tsbuildinfo
 next-env.d.ts
 
