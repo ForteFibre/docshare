@@ -107,8 +107,12 @@ export default function AdminRequestsPage() {
       cell: ({ row }) => (
         <div className='space-y-1'>
           <div className='font-medium'>{`${row.original.edition.year}年 ${row.original.edition.name}`}</div>
-          <div className='text-sm text-muted-foreground'>{row.original.university.name}</div>
-          <div className='text-sm'>{row.original.teamName ?? '(チーム名なし)'}</div>
+          {row.original.teamName ? (
+            <div className='text-sm text-muted-foreground'>{row.original.university.name}</div>
+          ) : null}
+          <div className='text-sm'>
+            {row.original.teamName ?? row.original.university.name ?? '(チーム名なし)'}
+          </div>
         </div>
       ),
     },

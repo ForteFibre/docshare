@@ -269,12 +269,18 @@ export function EditionSubmissionMatrix({ editionId }: { editionId: string }) {
           matrix.rows.map((row) => (
             <div key={row.participation.id} className='border rounded-lg p-4 space-y-3'>
               <div>
-                <p className='text-xs text-muted-foreground'>{row.participation.universityName}</p>
+                {row.participation.teamName ? (
+                  <p className='text-xs text-muted-foreground'>
+                    {row.participation.universityName}
+                  </p>
+                ) : null}
                 <Link
                   href={`/editions/${editionId}/teams/${row.participation.id}`}
                   className='text-primary underline font-medium'
                 >
-                  {row.participation.teamName ?? '(チーム名なし)'}
+                  {row.participation.teamName ??
+                    row.participation.universityName ??
+                    '(チーム名なし)'}
                 </Link>
               </div>
               <div className='space-y-3'>
