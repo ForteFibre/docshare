@@ -15,7 +15,7 @@ export const auth = betterAuth({
     additionalFields: {
       isAdmin: {
         type: 'boolean',
-        default: false,
+        defaultValue: false,
         required: true,
         input: false,
       },
