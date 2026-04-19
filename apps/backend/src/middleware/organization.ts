@@ -27,7 +27,7 @@ export const resolveOrganization: MiddlewareHandler<{
 
   const user = c.get('currentUser');
   const rows = await db
-    .select({ id: members.id })
+    .select({ organizationId: members.organizationId })
     .from(members)
     .where(
       organizationId
@@ -45,12 +45,12 @@ export const resolveOrganization: MiddlewareHandler<{
   if (!organizationId && rows.length > 0) {
     await auth.api.setActiveOrganization({
       body: {
-        organizationId: rows[0].id,
+        organizationId: rows[0].organizationId,
       },
       headers: c.req.raw.headers,
     });
   }
 
-  c.set('organizationId', organizationId ?? rows[0]?.id ?? null);
+  c.set('organizationId', organizationId ?? rows[0]?.organizationId ?? null);
   await next();
 };
