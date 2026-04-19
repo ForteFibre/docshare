@@ -20,6 +20,7 @@ COPY apps/backend/package.json ./apps/backend/package.json
 COPY packages/shared/package.json ./packages/shared/package.json
 RUN pnpm install --frozen-lockfile --prod --no-optional --filter-prod backend...
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
+COPY --from=builder /app/apps/backend/src/db/migrations ./apps/backend/dist/db/migrations
 
 EXPOSE 8787
 CMD ["node", "apps/backend/dist/index.js"]
