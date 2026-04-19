@@ -1,6 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import type { MiddlewareHandler } from 'hono';
 import { HTTPException } from 'hono/http-exception';
+import { auth } from '../auth.js';
 import { db } from '../db/index.js';
 import { members } from '../db/schema.js';
 import type { AppVariables } from './auth.js';
@@ -41,6 +42,15 @@ export const resolveOrganization: MiddlewareHandler<{
     });
   }
 
-  c.set('organizationId', organizationId);
+  if (!organizationId && rows.length > 0) {
+    await auth.api.setActiveOrganization({
+      body: {
+        organizationId: rows[0].id,
+      },
+      headers: c.req.raw.headers,
+    });
+  }
+
+  c.set('organizationId', organizationId ?? rows[0]?.id ?? null);
   await next();
 };
