@@ -225,14 +225,18 @@ export function EditionSubmissionMatrix({ editionId }: { editionId: string }) {
                     scope='row'
                     className='sticky left-0 z-10 bg-background p-3 border-b border-r align-top text-left font-normal'
                   >
-                    <p className='text-xs text-muted-foreground'>
-                      {row.participation.universityName}
-                    </p>
+                    {row.participation.teamName ? (
+                      <p className='text-xs text-muted-foreground'>
+                        {row.participation.universityName}
+                      </p>
+                    ) : null}
                     <Link
                       href={`/editions/${editionId}/teams/${row.participation.id}`}
                       className='text-primary underline font-medium'
                     >
-                      {row.participation.teamName ?? '(チーム名なし)'}
+                      {row.participation.teamName ??
+                        row.participation.universityName ??
+                        '(チーム名なし)'}
                     </Link>
                   </th>
                   {row.cells.map((cell, index) => {
