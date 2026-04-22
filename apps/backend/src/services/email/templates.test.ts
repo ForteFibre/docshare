@@ -30,20 +30,6 @@ describe('resolveEmailTemplate', () => {
     expect(email.text).toContain('代表者設定を開く: invitation:1234');
   });
 
-  it('renders invitation id-based owner emails', () => {
-    const email = resolveEmailTemplate('university-owner-invitation-id', {
-      universityName: 'Created University',
-      invitationId: 'inv-1234',
-    });
-
-    expect(email.subject).toBe('Created University の代表者招待');
-    expect(email.html).toContain('DocShare の画面で招待IDを入力');
-    expect(email.html).toContain('招待ID');
-    expect(email.html).toContain('inv-1234');
-    expect(email.text).toContain('DocShare の画面で招待IDを入力');
-    expect(email.text).toContain('招待ID: inv-1234');
-  });
-
   it('renders member invitation emails', () => {
     const email = resolveEmailTemplate('organization-member-invitation-link', {
       organizationName: 'Engineering Org',

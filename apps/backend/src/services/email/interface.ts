@@ -12,10 +12,6 @@ export type EmailTemplateMap = {
     universityName: string;
     invitationLink: string;
   };
-  'university-owner-invitation-id': {
-    universityName: string;
-    invitationId: string;
-  };
 };
 
 export type EmailTemplateId = keyof EmailTemplateMap;

@@ -139,21 +139,6 @@ const emailTemplateDefinitions: {
         },
       }),
   },
-  'university-owner-invitation-id': {
-    render: (payload) =>
-      renderEmail({
-        subject: `${payload.universityName} の代表者招待`,
-        heading: `${payload.universityName} の代表者招待`,
-        body: [
-          `DocShare で ${payload.universityName} の代表者アカウントを設定するための招待IDをお送りします。`,
-          'DocShare の画面で招待IDを入力し、代表者アカウントの設定を完了してください。',
-        ],
-        detail: {
-          label: '招待ID',
-          value: payload.invitationId,
-        },
-      }),
-  },
 };
 
 export const resolveEmailTemplate = <TemplateId extends EmailTemplateId>(

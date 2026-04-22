@@ -134,10 +134,10 @@ adminUniversityRoutes.openapi(createUniversityRoute, async (c) => {
 
     await emailService.sendEmail({
       to: body.data.ownerEmail,
-      template: 'university-owner-invitation-id',
+      template: 'organization-member-invitation-link',
       payload: {
-        universityName: inserted[0].name,
-        invitationId,
+        organizationName: inserted[0].name,
+        invitationLink: `invitation:${invitationId}`,
       },
     });
   }
