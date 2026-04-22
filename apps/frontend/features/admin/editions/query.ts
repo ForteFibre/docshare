@@ -13,6 +13,7 @@ export function useAdminEditionsList(queryParams: AdminEditionsQueryParams) {
             page: queryParams.page,
             pageSize: queryParams.pageSize,
             q: queryParams.q || undefined,
+            series_id: queryParams.seriesId || undefined,
           },
         },
       });
