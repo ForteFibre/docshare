@@ -1,4 +1,4 @@
-type Env = {
+export type Env = {
   DATABASE_URL: string;
   PORT: number;
   BETTER_AUTH_SECRET: string;
@@ -12,9 +12,16 @@ type Env = {
   S3_BUCKET_RULES: string;
   S3_BUCKET_SUBMISSIONS: string;
   S3_FORCE_PATH_STYLE: boolean;
-  EMAIL_PROVIDER: 'console' | 'sendgrid';
+  EMAIL_PROVIDER: 'console' | 'sendgrid' | 'smtp';
   SENDGRID_API_KEY?: string;
   SENDGRID_FROM: string;
+  SMTP_HOST?: string;
+  SMTP_PORT: number;
+  SMTP_USER?: string;
+  SMTP_PASS?: string;
+  SMTP_FROM?: string;
+  SMTP_SECURE: boolean;
+  SMTP_REQUIRE_TLS: boolean;
 };
 
 const toBool = (value: string | undefined, fallback: boolean): boolean => {
@@ -51,7 +58,17 @@ export const env: Env = {
   S3_BUCKET_RULES: process.env.S3_BUCKET_RULES ?? 'robocon-rules',
   S3_BUCKET_SUBMISSIONS: process.env.S3_BUCKET_SUBMISSIONS ?? 'robocon-submissions',
   S3_FORCE_PATH_STYLE: toBool(process.env.S3_FORCE_PATH_STYLE, true),
-  EMAIL_PROVIDER: process.env.EMAIL_PROVIDER === 'sendgrid' ? 'sendgrid' : 'console',
+  EMAIL_PROVIDER:
+    process.env.EMAIL_PROVIDER === 'sendgrid' || process.env.EMAIL_PROVIDER === 'smtp'
+      ? process.env.EMAIL_PROVIDER
+      : 'console',
   SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
   SENDGRID_FROM: process.env.SENDGRID_FROM ?? 'noreply@example.com',
+  SMTP_HOST: process.env.SMTP_HOST,
+  SMTP_PORT: Number(process.env.SMTP_PORT ?? 587),
+  SMTP_USER: process.env.SMTP_USER,
+  SMTP_PASS: process.env.SMTP_PASS,
+  SMTP_FROM: process.env.SMTP_FROM,
+  SMTP_SECURE: toBool(process.env.SMTP_SECURE, false),
+  SMTP_REQUIRE_TLS: toBool(process.env.SMTP_REQUIRE_TLS, false),
 };
