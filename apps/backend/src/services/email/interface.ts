@@ -12,6 +12,14 @@ export type EmailTemplateMap = {
     universityName: string;
     invitationLink: string;
   };
+  'email-verification': {
+    userName: string;
+    verificationLink: string;
+  };
+  'password-reset': {
+    userName: string;
+    resetLink: string;
+  };
 };
 
 export type EmailTemplateId = keyof EmailTemplateMap;

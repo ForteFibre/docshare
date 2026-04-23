@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,9 +10,31 @@ import { useRegisterForm } from '@/features/public/auth/register/hooks';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { form, error, validators } = useRegisterForm(() => {
-    router.push('/dashboard');
+  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
+  const { form, error, validators } = useRegisterForm((email) => {
+    setRegisteredEmail(email);
   });
+
+  if (registeredEmail) {
+    return (
+      <div className='container mx-auto px-4 py-16 flex justify-center'>
+        <Card className='w-full max-w-md'>
+          <CardHeader>
+            <CardTitle>確認メールを送信しました</CardTitle>
+            <CardDescription>{registeredEmail} に確認リンクを送信しました</CardDescription>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <p className='text-sm text-muted-foreground'>
+              メール内のリンクを開くとアカウント作成が完了します。
+            </p>
+            <Button type='button' className='w-full' onClick={() => router.push('/auth/login')}>
+              ログインへ
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className='container mx-auto px-4 py-16 flex justify-center'>

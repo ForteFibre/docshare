@@ -43,6 +43,34 @@ describe('resolveEmailTemplate', () => {
     expect(email.text).toContain('メンバー招待を開く: https://app.example.test/invite/5678');
   });
 
+  it('renders email verification emails', () => {
+    const email = resolveEmailTemplate('email-verification', {
+      userName: 'New User',
+      verificationLink: 'https://app.example.test/auth/verify-email?token=token-1',
+    });
+
+    expect(email.subject).toBe('DocShare メールアドレスの確認');
+    expect(email.html).toContain('New User さん');
+    expect(email.html).toContain('メールアドレスの確認を完了してください');
+    expect(email.text).toContain(
+      'メールアドレスを確認する: https://app.example.test/auth/verify-email?token=token-1',
+    );
+  });
+
+  it('renders password reset emails', () => {
+    const email = resolveEmailTemplate('password-reset', {
+      userName: 'Existing User',
+      resetLink: 'https://app.example.test/auth/reset-password?token=token-2',
+    });
+
+    expect(email.subject).toBe('DocShare パスワード再設定');
+    expect(email.html).toContain('Existing User さん');
+    expect(email.html).toContain('パスワード再設定がリクエストされました');
+    expect(email.text).toContain(
+      'パスワードを再設定する: https://app.example.test/auth/reset-password?token=token-2',
+    );
+  });
+
   it('escapes dynamic values in html output', () => {
     const email = resolveEmailTemplate('organization-invitation', {
       organizationName: 'R&D <Team>',

@@ -18,6 +18,11 @@ export function useLoginForm(onSuccess: () => void) {
       });
 
       if (result.error) {
+        if (result.error.code === 'EMAIL_NOT_VERIFIED') {
+          setError('メールアドレスの確認が必要です。確認メールを再送信しました。');
+          return;
+        }
+
         setError('メールアドレスまたはパスワードが正しくありません');
         return;
       }

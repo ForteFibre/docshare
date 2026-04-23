@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { useInvalidateMe } from '@/contexts/AuthContext';
 import { authClient } from '@/lib/auth/client';
 
-export function useRegisterForm(onSuccess: () => void) {
+export function useRegisterForm(onSuccess: (email: string) => void) {
   const invalidateMe = useInvalidateMe();
   const [error, setError] = useState<string | null>(null);
 
@@ -16,6 +16,7 @@ export function useRegisterForm(onSuccess: () => void) {
         name: value.name,
         email: value.email,
         password: value.password,
+        callbackURL: `${window.location.origin}/auth/verify-email`,
       });
 
       if (result.error) {
@@ -23,8 +24,10 @@ export function useRegisterForm(onSuccess: () => void) {
         return;
       }
 
-      await invalidateMe();
-      onSuccess();
+      if (result.data?.token) {
+        await invalidateMe();
+      }
+      onSuccess(value.email);
     },
   });
 

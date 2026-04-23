@@ -139,6 +139,36 @@ const emailTemplateDefinitions: {
         },
       }),
   },
+  'email-verification': {
+    render: (payload) =>
+      renderEmail({
+        subject: 'DocShare メールアドレスの確認',
+        heading: 'メールアドレスの確認',
+        body: [
+          `${payload.userName} さん、DocShare への登録ありがとうございます。`,
+          '以下のリンクからメールアドレスの確認を完了してください。',
+        ],
+        action: {
+          label: 'メールアドレスを確認する',
+          href: payload.verificationLink,
+        },
+      }),
+  },
+  'password-reset': {
+    render: (payload) =>
+      renderEmail({
+        subject: 'DocShare パスワード再設定',
+        heading: 'パスワード再設定',
+        body: [
+          `${payload.userName} さんの DocShare アカウントで、パスワード再設定がリクエストされました。`,
+          '以下のリンクから新しいパスワードを設定してください。',
+        ],
+        action: {
+          label: 'パスワードを再設定する',
+          href: payload.resetLink,
+        },
+      }),
+  },
 };
 
 export const resolveEmailTemplate = <TemplateId extends EmailTemplateId>(

@@ -28,8 +28,36 @@ export const auth = betterAuth({
   trustedOrigins: env.CORS_ALLOWED_ORIGINS,
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
+    autoSignIn: false,
+    async sendResetPassword({ user, url }) {
+      await emailService.sendEmail({
+        to: user.email,
+        template: 'password-reset',
+        payload: {
+          userName: user.name,
+          resetLink: url,
+        },
+      });
+    },
+    revokeSessionsOnPasswordReset: true,
     password: {
       verify: verifyPassword,
+    },
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    sendOnSignIn: true,
+    autoSignInAfterVerification: true,
+    async sendVerificationEmail({ user, url }) {
+      await emailService.sendEmail({
+        to: user.email,
+        template: 'email-verification',
+        payload: {
+          userName: user.name,
+          verificationLink: url,
+        },
+      });
     },
   },
   plugins: [
