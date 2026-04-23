@@ -3,6 +3,7 @@ import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
 import { asc, count, desc, ilike, or } from 'drizzle-orm';
 import { db } from '../../db/index.js';
 import { invitations, organizations } from '../../db/schema.js';
+import { buildInvitationLink } from '../../lib/invitation-link.js';
 import {
   createPaginatedResponseSchema,
   createPaginationMeta,
@@ -134,8 +135,11 @@ adminUniversityRoutes.openapi(createUniversityRoute, async (c) => {
 
     await emailService.sendEmail({
       to: body.data.ownerEmail,
-      subject: `${inserted[0].name} の代表者招待`,
-      html: `招待ID: ${invitationId}`,
+      template: 'organization-member-invitation-link',
+      payload: {
+        organizationName: inserted[0].name,
+        invitationLink: buildInvitationLink(invitationId),
+      },
     });
   }
 

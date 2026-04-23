@@ -9,7 +9,7 @@ tools:
     "web",
     "ms-vscode.vscode-websearchforcopilot/websearch",
   ]
-model: "GPT-5.3-Codex"
+model: "Claude Sonnet 4.6"
 ---
 
 与えられたイシューと実装に対する、プルリクエストを作成してください。

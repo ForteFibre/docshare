@@ -30,14 +30,17 @@ import {
   useDeleteEditionMutation,
   useUploadEditionRuleMutation,
 } from '@/features/admin/editions/mutations';
-import { useAdminEditionsList } from '@/features/admin/editions/query';
+import { useAdminEditionsList, useSeriesForEditionForm } from '@/features/admin/editions/query';
 import type { Edition, SharingStatus } from '@/features/admin/editions/types';
 import { SHARING_STATUS_LABELS } from '@/features/admin/editions/types';
+
+const ALL_SERIES_VALUE = 'all';
 
 const paginationParsers = {
   page: parseAsInteger.withDefault(1),
   pageSize: parseAsInteger.withDefault(20),
   q: parseAsString.withDefault(''),
+  seriesId: parseAsString.withDefault(''),
 };
 
 export default function AdminEditionsPage() {
@@ -48,9 +51,12 @@ export default function AdminEditionsPage() {
   const [uploadingEditionId, setUploadingEditionId] = useState<string | null>(null);
 
   const { data, isLoading } = useAdminEditionsList(queryParams);
+  const { data: seriesData } = useSeriesForEditionForm();
   const deleteMutation = useDeleteEditionMutation();
   const changeStatusMutation = useChangeEditionStatusMutation();
   const uploadRuleMutation = useUploadEditionRuleMutation();
+  const series = seriesData?.data ?? [];
+  const selectedSeries = series.find((item) => item.id === queryParams.seriesId);
 
   const handleRuleUpload = async (editionId: string, file: File) => {
     const edition = data?.data.find((item) => item.id === editionId);
@@ -169,7 +175,28 @@ export default function AdminEditionsPage() {
       />
       <div className='flex items-center justify-between gap-3 flex-wrap'>
         <h1 className='text-2xl font-bold'>大会回管理</h1>
-        <div className='flex gap-2'>
+        <div className='flex gap-2 flex-wrap'>
+          <Select
+            value={queryParams.seriesId || ALL_SERIES_VALUE}
+            onValueChange={(value) =>
+              setQueryParams({
+                seriesId: value === ALL_SERIES_VALUE ? '' : value,
+                page: 1,
+              })
+            }
+          >
+            <SelectTrigger className='w-48'>
+              <SelectValue>{selectedSeries ? selectedSeries.name : 'すべてのシリーズ'}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_SERIES_VALUE}>すべてのシリーズ</SelectItem>
+              {series.map((item) => (
+                <SelectItem key={item.id} value={item.id}>
+                  {item.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Input
             placeholder='検索...'
             defaultValue={queryParams.q}

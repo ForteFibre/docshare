@@ -33,6 +33,7 @@ export type AdminEditionsQueryParams = {
   page: number;
   pageSize: number;
   q: string;
+  seriesId: string;
 };
 
 export type EditionFormValues = {

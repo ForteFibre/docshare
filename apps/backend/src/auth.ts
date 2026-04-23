@@ -4,6 +4,7 @@ import { organization } from 'better-auth/plugins';
 import { db } from './db/index.js';
 import * as schema from './db/schema.js';
 import { env } from './lib/config.js';
+import { buildInvitationLink } from './lib/invitation-link.js';
 import { verifyPassword } from './lib/password.js';
 import { emailService } from './services/email/index.js';
 
@@ -27,18 +28,50 @@ export const auth = betterAuth({
   trustedOrigins: env.CORS_ALLOWED_ORIGINS,
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
+    autoSignIn: false,
+    async sendResetPassword({ user, url }) {
+      await emailService.sendEmail({
+        to: user.email,
+        template: 'password-reset',
+        payload: {
+          userName: user.name,
+          resetLink: url,
+        },
+      });
+    },
+    revokeSessionsOnPasswordReset: true,
     password: {
       verify: verifyPassword,
+    },
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    sendOnSignIn: true,
+    autoSignInAfterVerification: true,
+    async sendVerificationEmail({ user, url }) {
+      await emailService.sendEmail({
+        to: user.email,
+        template: 'email-verification',
+        payload: {
+          userName: user.name,
+          verificationLink: url,
+        },
+      });
     },
   },
   plugins: [
     organization({
       async sendInvitationEmail(data) {
-        const inviteLink = `${env.APP_URL}/invite/${data.id}`;
+        const inviteLink = buildInvitationLink(data.id);
         await emailService.sendEmail({
           to: data.email,
-          subject: `${data.organization.name} への招待`,
-          html: `${data.inviter.user.name} さんが ${data.organization.name} へ招待しました: ${inviteLink}`,
+          template: 'organization-invitation',
+          payload: {
+            organizationName: data.organization.name,
+            inviterName: data.inviter.user.name,
+            inviteLink,
+          },
         });
       },
     }),
