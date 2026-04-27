@@ -543,11 +543,19 @@ const validateUploadedFileOrReject = async (params: {
     return { ok: false, error: 'mimeType is inconsistent with file extension' };
   }
 
-  let metadata: { contentLength: number | null; contentType: string | null };
-  try {
-    metadata = await getObjectMetadata(env.S3_BUCKET_SUBMISSIONS, s3Key);
-  } catch {
-    return { ok: false, error: 'Uploaded file not found' };
+  let metadata: { contentLength: number | null; contentType: string | null } | null = null;
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      metadata = await getObjectMetadata(env.S3_BUCKET_SUBMISSIONS, s3Key);
+      break;
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+
+  if (!metadata) {
+    return { ok: false, error: 'Failed to retrieve uploaded file metadata' };
   }
 
   return validateUploadedFileReference({
