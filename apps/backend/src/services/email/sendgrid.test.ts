@@ -58,6 +58,7 @@ describe('SendGridEmailService', () => {
       payload: {
         universityName: 'Approve University',
         invitationLink: 'https://app.example.test/invite/invite-1',
+        requestedByEmail: 'member@example.com',
       },
     });
 

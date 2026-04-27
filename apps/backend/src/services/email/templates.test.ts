@@ -21,13 +21,41 @@ describe('resolveEmailTemplate', () => {
     const email = resolveEmailTemplate('university-owner-invitation-link', {
       universityName: 'Approve University',
       invitationLink: 'https://app.example.test/invite/1234',
+      requestedByEmail: 'member@example.com',
     });
 
     expect(email.subject).toBe('Approve University の代表者招待');
     expect(email.html).toContain('代表者アカウントを設定するための招待リンク');
+    expect(email.html).toContain('member@example.com');
+    expect(email.html).toContain('申請元のアカウントで開いて');
     expect(email.html).toContain('https://app.example.test/invite/1234');
-    expect(email.text).toContain('代表者アカウントを設定するための招待リンク');
+    expect(email.text).toContain('この申請は member@example.com のアカウントから送信されています');
+    expect(email.text).toContain('このメールの受信先ではなく、申請元のアカウントで開いて');
     expect(email.text).toContain('代表者設定を開く: https://app.example.test/invite/1234');
+  });
+
+  it('renders approved participation request emails with a team name', () => {
+    const email = resolveEmailTemplate('participation-request-approved', {
+      editionName: '2026 Main Edition',
+      universityName: 'Engineering Org',
+      teamName: 'Team Rocket',
+    });
+
+    expect(email.subject).toBe('2026 Main Edition の大会追加申請が承認されました');
+    expect(email.html).toContain('2026 Main Edition への参加申請が承認されました');
+    expect(email.html).toContain('Engineering Org (Team Rocket) として参加登録されています');
+    expect(email.text).toContain('Engineering Org (Team Rocket) として参加登録されています');
+  });
+
+  it('renders approved participation request emails without a team name', () => {
+    const email = resolveEmailTemplate('participation-request-approved', {
+      editionName: '2026 Main Edition',
+      universityName: 'Engineering Org',
+      teamName: null,
+    });
+
+    expect(email.html).toContain('Engineering Org として参加登録されています');
+    expect(email.text).toContain('Engineering Org として参加登録されています');
   });
 
   it('renders member invitation emails', () => {

@@ -11,6 +11,12 @@ export type EmailTemplateMap = {
   'university-owner-invitation-link': {
     universityName: string;
     invitationLink: string;
+    requestedByEmail: string;
+  };
+  'participation-request-approved': {
+    editionName: string;
+    universityName: string;
+    teamName?: string | null;
   };
   'email-verification': {
     userName: string;

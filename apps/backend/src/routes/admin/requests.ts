@@ -712,6 +712,7 @@ adminRequestRoutes.openapi(approveUniversityRequestRoute, async (c) => {
     payload: {
       universityName: invitationUniversityName,
       invitationLink: buildInvitationLink(invitationId),
+      requestedByEmail: requesterUser.email,
     },
   });
 
@@ -817,6 +818,17 @@ adminRequestRoutes.openapi(approveParticipationRequestRoute, async (c) => {
     return c.json({ error: 'Already reviewed' as const }, 409);
   }
 
+  const requesterUserRows = await db
+    .select({ id: users.id, email: users.email })
+    .from(users)
+    .where(eq(users.id, request.requestedByUserId))
+    .limit(1);
+
+  const requesterUser = requesterUserRows[0];
+  if (!requesterUser) {
+    return c.json({ error: 'Not found' as const }, 404);
+  }
+
   const duplicateRows = await db
     .select({ id: participations.id })
     .from(participations)
@@ -859,6 +871,16 @@ adminRequestRoutes.openapi(approveParticipationRequestRoute, async (c) => {
   if (!detail) {
     return c.json({ error: 'Not found' as const }, 404);
   }
+
+  await emailService.sendEmail({
+    to: requesterUser.email,
+    template: 'participation-request-approved',
+    payload: {
+      editionName: detail.edition.name,
+      universityName: detail.university.name,
+      teamName: detail.teamName,
+    },
+  });
 
   return c.json({ data: detail }, 200);
 });

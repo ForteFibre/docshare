@@ -1180,6 +1180,7 @@ describe('issue #11 api integration', () => {
           status: 'pending',
         },
       ],
+      [{ id: 'member-user', name: 'member', email: 'member@example.com' }],
       [],
       [],
       [],
@@ -1230,6 +1231,7 @@ describe('issue #11 api integration', () => {
         invitationLink: expect.stringMatching(
           /^http:\/\/localhost:3000\/invite\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
         ),
+        requestedByEmail: 'member@example.com',
       },
     });
     const approveJson = (await approveRes.json()) as {
@@ -1308,6 +1310,7 @@ describe('issue #11 api integration', () => {
           status: 'pending',
         },
       ],
+      [{ id: 'member-user', name: 'member', email: 'member@example.com' }],
       [{ id: 'org-existing', name: 'Existing University' }],
       [],
       [],
@@ -1362,6 +1365,7 @@ describe('issue #11 api integration', () => {
         invitationLink: expect.stringMatching(
           /^http:\/\/localhost:3000\/invite\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
         ),
+        requestedByEmail: 'member@example.com',
       },
     });
     expect(
@@ -1519,6 +1523,7 @@ describe('issue #11 api integration', () => {
           status: 'pending',
         },
       ],
+      [{ id: 'owner-user', email: 'owner@example.com' }],
       [],
       [
         {
@@ -1561,10 +1566,21 @@ describe('issue #11 api integration', () => {
     );
 
     expect(approveRes.status).toBe(200);
+    expect(mockSendEmail).toHaveBeenCalledWith({
+      to: 'owner@example.com',
+      template: 'participation-request-approved',
+      payload: {
+        editionName: '2026 Main Edition',
+        universityName: 'Org One',
+        teamName: 'Team Rocket',
+      },
+    });
     expect(
       ((await approveRes.json()) as { data: { createdParticipationId: string } }).data
         .createdParticipationId,
     ).toBe('10000000-0000-4000-8000-000000000099');
+
+    mockSendEmail.mockClear();
 
     enqueueDb(
       [
@@ -1578,6 +1594,7 @@ describe('issue #11 api integration', () => {
           status: 'pending',
         },
       ],
+      [{ id: 'owner-user', email: 'owner@example.com' }],
       [{ id: '10000000-0000-4000-8000-000000000099' }],
     );
 
@@ -1589,6 +1606,7 @@ describe('issue #11 api integration', () => {
       },
     );
     expect(duplicateApproveRes.status).toBe(409);
+    expect(mockSendEmail).not.toHaveBeenCalled();
   });
 
   it('filters participation requests by selected organization', async () => {
