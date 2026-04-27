@@ -327,7 +327,8 @@ export const universityCreationRequests = pgTable(
       onDelete: 'restrict',
     }),
     reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
-    createdOrganizationId: text('created_organization_id').references(() => organizations.id, {
+    approvalMode: text('approval_mode').$type<'create' | 'attach'>(),
+    approvedOrganizationId: text('approved_organization_id').references(() => organizations.id, {
       onDelete: 'set null',
     }),
     createdInvitationId: text('created_invitation_id').references(() => invitations.id, {

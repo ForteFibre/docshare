@@ -27,6 +27,8 @@ const reviewerSchema = z
   })
   .nullable();
 
+const approvalModeSchema = z.enum(['create', 'attach']);
+
 const universityRequestSchema = z.object({
   id: z.string().uuid(),
   universityName: z.string(),
@@ -36,7 +38,9 @@ const universityRequestSchema = z.object({
   requestedBy: requesterSchema,
   reviewedBy: reviewerSchema,
   reviewedAt: z.date().nullable(),
-  createdOrganizationId: z.string().nullable(),
+  approvalMode: approvalModeSchema.nullable(),
+  approvedOrganizationId: z.string().nullable(),
+  approvedOrganizationName: z.string().nullable(),
   createdInvitationId: z.string().nullable(),
   adminNote: z.string().nullable(),
   createdAt: z.date(),
@@ -213,7 +217,9 @@ requestRoutes.openapi(listUniversityRequestsRoute, async (c) => {
       requestedByName: users.name,
       requestedByEmail: users.email,
       reviewedAt: universityCreationRequests.reviewedAt,
-      createdOrganizationId: universityCreationRequests.createdOrganizationId,
+      approvalMode: universityCreationRequests.approvalMode,
+      approvedOrganizationId: universityCreationRequests.approvedOrganizationId,
+      approvedOrganizationName: organizations.name,
       createdInvitationId: universityCreationRequests.createdInvitationId,
       adminNote: universityCreationRequests.adminNote,
       createdAt: universityCreationRequests.createdAt,
@@ -221,6 +227,10 @@ requestRoutes.openapi(listUniversityRequestsRoute, async (c) => {
     })
     .from(universityCreationRequests)
     .innerJoin(users, eq(users.id, universityCreationRequests.requestedByUserId))
+    .leftJoin(
+      organizations,
+      eq(organizations.id, universityCreationRequests.approvedOrganizationId),
+    )
     .where(eq(universityCreationRequests.requestedByUserId, user.id))
     .orderBy(desc(universityCreationRequests.createdAt));
 
@@ -239,7 +249,9 @@ requestRoutes.openapi(listUniversityRequestsRoute, async (c) => {
         },
         reviewedBy: null,
         reviewedAt: row.reviewedAt,
-        createdOrganizationId: row.createdOrganizationId,
+        approvalMode: row.approvalMode,
+        approvedOrganizationId: row.approvedOrganizationId,
+        approvedOrganizationName: row.approvedOrganizationName,
         createdInvitationId: row.createdInvitationId,
         adminNote: row.adminNote,
         createdAt: row.createdAt,
@@ -283,7 +295,9 @@ requestRoutes.openapi(createUniversityRequestRoute, async (c) => {
         },
         reviewedBy: null,
         reviewedAt: request.reviewedAt,
-        createdOrganizationId: request.createdOrganizationId,
+        approvalMode: request.approvalMode,
+        approvedOrganizationId: request.approvedOrganizationId,
+        approvedOrganizationName: null,
         createdInvitationId: request.createdInvitationId,
         adminNote: request.adminNote,
         createdAt: request.createdAt,

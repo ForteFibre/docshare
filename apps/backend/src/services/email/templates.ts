@@ -131,12 +131,26 @@ const emailTemplateDefinitions: {
         heading: `${payload.universityName} の代表者招待`,
         body: [
           `DocShare で ${payload.universityName} の代表者アカウントを設定するための招待リンクをお送りします。`,
-          '以下のリンクから代表者アカウントの設定を完了してください。',
+          `この申請は ${payload.requestedByEmail} のアカウントから送信されています。`,
+          '以下のリンクは、このメールの受信先ではなく、申請元のアカウントで開いて代表者アカウントの設定を完了してください。',
         ],
         action: {
           label: '代表者設定を開く',
           href: payload.invitationLink,
         },
+      }),
+  },
+  'participation-request-approved': {
+    render: (payload) =>
+      renderEmail({
+        subject: `${payload.editionName} の大会追加申請が承認されました`,
+        heading: '大会追加申請が承認されました',
+        body: [
+          `DocShare の ${payload.editionName} への参加申請が承認されました。`,
+          `${payload.universityName}${
+            payload.teamName ? ` (${payload.teamName})` : ''
+          } として参加登録されています。`,
+        ],
       }),
   },
   'email-verification': {

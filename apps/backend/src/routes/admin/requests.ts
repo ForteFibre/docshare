@@ -37,9 +37,23 @@ const reviewerSchema = z
   })
   .nullable();
 
+const approvalModeSchema = z.enum(['create', 'attach']);
+
 const reviewBodySchema = z.object({
   adminNote: z.string().optional(),
 });
+
+const approveUniversityRequestBodySchema = z.discriminatedUnion('mode', [
+  z.object({
+    mode: z.literal('create'),
+    adminNote: z.string().optional(),
+  }),
+  z.object({
+    mode: z.literal('attach'),
+    organizationId: z.string().min(1),
+    adminNote: z.string().optional(),
+  }),
+]);
 
 const universityRequestSchema = z.object({
   id: z.string().uuid(),
@@ -50,7 +64,9 @@ const universityRequestSchema = z.object({
   requestedBy: requesterSchema,
   reviewedBy: reviewerSchema,
   reviewedAt: z.date().nullable(),
-  createdOrganizationId: z.string().nullable(),
+  approvalMode: approvalModeSchema.nullable(),
+  approvedOrganizationId: z.string().nullable(),
+  approvedOrganizationName: z.string().nullable(),
   createdInvitationId: z.string().nullable(),
   adminNote: z.string().nullable(),
   createdAt: z.date(),
@@ -131,6 +147,13 @@ const approveUniversityRequestRoute = createRoute({
   path: '/university-requests/{id}/approve',
   request: {
     params: z.object({ id: z.string().uuid() }),
+    body: {
+      content: {
+        'application/json': {
+          schema: approveUniversityRequestBodySchema,
+        },
+      },
+    },
   },
   responses: {
     200: {
@@ -138,6 +161,14 @@ const approveUniversityRequestRoute = createRoute({
       content: {
         'application/json': {
           schema: z.object({ data: universityRequestSchema }),
+        },
+      },
+    },
+    400: {
+      description: '不正入力',
+      content: {
+        'application/json': {
+          schema: z.object({ error: z.any() }),
         },
       },
     },
@@ -153,7 +184,12 @@ const approveUniversityRequestRoute = createRoute({
       description: '処理済み',
       content: {
         'application/json': {
-          schema: z.object({ error: z.literal('Already reviewed') }),
+          schema: z.object({
+            error: z.union([
+              z.literal('Already reviewed'),
+              z.literal('Pending invitation already exists'),
+            ]),
+          }),
         },
       },
     },
@@ -402,7 +438,9 @@ const listUniversityRequestDetails = async ({
       requestedByEmail: users.email,
       reviewedByUserId: universityCreationRequests.reviewedByUserId,
       reviewedAt: universityCreationRequests.reviewedAt,
-      createdOrganizationId: universityCreationRequests.createdOrganizationId,
+      approvalMode: universityCreationRequests.approvalMode,
+      approvedOrganizationId: universityCreationRequests.approvedOrganizationId,
+      approvedOrganizationName: organizations.name,
       createdInvitationId: universityCreationRequests.createdInvitationId,
       adminNote: universityCreationRequests.adminNote,
       createdAt: universityCreationRequests.createdAt,
@@ -410,6 +448,10 @@ const listUniversityRequestDetails = async ({
     })
     .from(universityCreationRequests)
     .innerJoin(users, eq(users.id, universityCreationRequests.requestedByUserId))
+    .leftJoin(
+      organizations,
+      eq(organizations.id, universityCreationRequests.approvedOrganizationId),
+    )
     .orderBy(
       direction === 'asc'
         ? asc(universityCreationRequests.createdAt)
@@ -434,7 +476,9 @@ const listUniversityRequestDetails = async ({
       },
       reviewedBy: row.reviewedByUserId ? (reviewerMap.get(row.reviewedByUserId) ?? null) : null,
       reviewedAt: row.reviewedAt,
-      createdOrganizationId: row.createdOrganizationId,
+      approvalMode: row.approvalMode,
+      approvedOrganizationId: row.approvedOrganizationId,
+      approvedOrganizationName: row.approvedOrganizationName,
       createdInvitationId: row.createdInvitationId,
       adminNote: row.adminNote,
       createdAt: row.createdAt,
@@ -578,6 +622,11 @@ adminRequestRoutes.openapi(listUniversityRequestsRoute, async (c) => {
 adminRequestRoutes.openapi(approveUniversityRequestRoute, async (c) => {
   const user = c.get('currentUser');
   const requestId = c.req.param('id');
+  const body = approveUniversityRequestBodySchema.safeParse(await c.req.json());
+  if (!body.success) {
+    return c.json({ error: body.error.flatten() }, 400);
+  }
+
   const existing = await db
     .select()
     .from(universityCreationRequests)
@@ -592,21 +641,66 @@ adminRequestRoutes.openapi(approveUniversityRequestRoute, async (c) => {
     return c.json({ error: 'Already reviewed' as const }, 409);
   }
 
-  const organizationId = randomUUID();
-  const slug = await getUniqueUniversitySlug(request.universityName);
+  const requesterUserRows = await db
+    .select({ id: users.id, name: users.name, email: users.email })
+    .from(users)
+    .where(eq(users.id, request.requestedByUserId))
+    .limit(1);
+
+  const requesterUser = requesterUserRows[0];
+  if (!requesterUser) {
+    return c.json({ error: 'Not found' as const }, 404);
+  }
+
+  const organizationId = body.data.mode === 'attach' ? body.data.organizationId : randomUUID();
+  let invitationUniversityName = request.universityName;
   const invitationId = randomUUID();
   const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);
 
-  await db.insert(organizations).values({
-    id: organizationId,
-    name: request.universityName,
-    slug,
-  });
+  if (body.data.mode === 'create') {
+    const slug = await getUniqueUniversitySlug(request.universityName);
+    await db.insert(organizations).values({
+      id: organizationId,
+      name: request.universityName,
+      slug,
+    });
+  } else {
+    const organizationsRows = await db
+      .select({ id: organizations.id, name: organizations.name })
+      .from(organizations)
+      .where(eq(organizations.id, organizationId))
+      .limit(1);
 
+    const approvedOrganization = organizationsRows[0];
+    if (!approvedOrganization) {
+      return c.json({ error: 'Not found' as const }, 404);
+    }
+
+    invitationUniversityName = approvedOrganization.name;
+
+    const pendingInvitationRows = await db
+      .select({ id: invitations.id })
+      .from(invitations)
+      .where(
+        and(
+          eq(invitations.organizationId, organizationId),
+          eq(invitations.email, requesterUser.email),
+          eq(invitations.role, 'owner'),
+          eq(invitations.status, 'pending'),
+        ),
+      )
+      .limit(1);
+
+    if (pendingInvitationRows[0]) {
+      return c.json({ error: 'Pending invitation already exists' as const }, 409);
+    }
+  }
+
+  // 招待状を発行して代表にメール送信、ただし承認は申請元が行う形式
   await db.insert(invitations).values({
     id: invitationId,
     organizationId,
-    email: request.representativeEmail,
+    email: requesterUser.email,
     role: 'owner',
     inviterId: user.id,
     expiresAt,
@@ -616,8 +710,9 @@ adminRequestRoutes.openapi(approveUniversityRequestRoute, async (c) => {
     to: request.representativeEmail,
     template: 'university-owner-invitation-link',
     payload: {
-      universityName: request.universityName,
+      universityName: invitationUniversityName,
       invitationLink: buildInvitationLink(invitationId),
+      requestedByEmail: requesterUser.email,
     },
   });
 
@@ -627,8 +722,10 @@ adminRequestRoutes.openapi(approveUniversityRequestRoute, async (c) => {
       status: 'approved',
       reviewedByUserId: user.id,
       reviewedAt: new Date(),
-      createdOrganizationId: organizationId,
+      approvalMode: body.data.mode,
+      approvedOrganizationId: organizationId,
       createdInvitationId: invitationId,
+      adminNote: body.data.adminNote ?? null,
       updatedAt: new Date(),
     })
     .where(eq(universityCreationRequests.id, requestId));
@@ -721,6 +818,17 @@ adminRequestRoutes.openapi(approveParticipationRequestRoute, async (c) => {
     return c.json({ error: 'Already reviewed' as const }, 409);
   }
 
+  const requesterUserRows = await db
+    .select({ id: users.id, email: users.email })
+    .from(users)
+    .where(eq(users.id, request.requestedByUserId))
+    .limit(1);
+
+  const requesterUser = requesterUserRows[0];
+  if (!requesterUser) {
+    return c.json({ error: 'Not found' as const }, 404);
+  }
+
   const duplicateRows = await db
     .select({ id: participations.id })
     .from(participations)
@@ -763,6 +871,16 @@ adminRequestRoutes.openapi(approveParticipationRequestRoute, async (c) => {
   if (!detail) {
     return c.json({ error: 'Not found' as const }, 404);
   }
+
+  await emailService.sendEmail({
+    to: requesterUser.email,
+    template: 'participation-request-approved',
+    payload: {
+      editionName: detail.edition.name,
+      universityName: detail.university.name,
+      teamName: detail.teamName,
+    },
+  });
 
   return c.json({ data: detail }, 200);
 });
