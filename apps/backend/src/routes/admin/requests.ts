@@ -641,6 +641,17 @@ adminRequestRoutes.openapi(approveUniversityRequestRoute, async (c) => {
     return c.json({ error: 'Already reviewed' as const }, 409);
   }
 
+  const requesterUserRows = await db
+    .select({ id: users.id, name: users.name, email: users.email })
+    .from(users)
+    .where(eq(users.id, request.requestedByUserId))
+    .limit(1);
+
+  const requesterUser = requesterUserRows[0];
+  if (!requesterUser) {
+    return c.json({ error: 'Not found' as const }, 404);
+  }
+
   const organizationId = body.data.mode === 'attach' ? body.data.organizationId : randomUUID();
   let invitationUniversityName = request.universityName;
   const invitationId = randomUUID();
@@ -685,10 +696,11 @@ adminRequestRoutes.openapi(approveUniversityRequestRoute, async (c) => {
     }
   }
 
+  // 招待状を発行して代表にメール送信、ただし承認は申請元が行う形式
   await db.insert(invitations).values({
     id: invitationId,
     organizationId,
-    email: request.representativeEmail,
+    email: requesterUser.email,
     role: 'owner',
     inviterId: user.id,
     expiresAt,
