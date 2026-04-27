@@ -1066,7 +1066,8 @@ describe('issue #11 api integration', () => {
         message: 'Please add us',
         status: 'pending',
         reviewedAt: null,
-        createdOrganizationId: null,
+        approvalMode: null,
+        approvedOrganizationId: null,
         createdInvitationId: null,
         adminNote: null,
         createdAt: '2026-03-20T00:00:00.000Z',
@@ -1102,7 +1103,9 @@ describe('issue #11 api integration', () => {
         },
         reviewedBy: null,
         reviewedAt: null,
-        createdOrganizationId: null,
+        approvalMode: null,
+        approvedOrganizationId: null,
+        approvedOrganizationName: null,
         createdInvitationId: null,
         adminNote: null,
         createdAt: '2026-03-20T00:00:00.000Z',
@@ -1121,7 +1124,9 @@ describe('issue #11 api integration', () => {
         requestedByName: 'member',
         requestedByEmail: 'member@example.com',
         reviewedAt: null,
-        createdOrganizationId: null,
+        approvalMode: null,
+        approvedOrganizationId: null,
+        approvedOrganizationName: null,
         createdInvitationId: null,
         adminNote: null,
         createdAt: '2026-03-20T00:00:00.000Z',
@@ -1149,7 +1154,9 @@ describe('issue #11 api integration', () => {
           },
           reviewedBy: null,
           reviewedAt: null,
-          createdOrganizationId: null,
+          approvalMode: null,
+          approvedOrganizationId: null,
+          approvedOrganizationName: null,
           createdInvitationId: null,
           adminNote: null,
           createdAt: '2026-03-20T00:00:00.000Z',
@@ -1190,7 +1197,9 @@ describe('issue #11 api integration', () => {
           requestedByEmail: 'member@example.com',
           reviewedByUserId: 'admin-user',
           reviewedAt: '2026-03-20T00:00:00.000Z',
-          createdOrganizationId: 'org-new',
+          approvalMode: 'create',
+          approvedOrganizationId: 'org-new',
+          approvedOrganizationName: 'Approve University',
           createdInvitationId: 'invite-new',
           adminNote: null,
           createdAt: '2026-03-20T00:00:00.000Z',
@@ -1204,7 +1213,11 @@ describe('issue #11 api integration', () => {
       '/api/admin/university-requests/50000000-0000-4000-8000-000000000002/approve',
       {
         method: 'POST',
-        headers: { 'x-role': 'admin' },
+        headers: {
+          'content-type': 'application/json',
+          'x-role': 'admin',
+        },
+        body: JSON.stringify({ mode: 'create' }),
       },
     );
 
@@ -1220,10 +1233,11 @@ describe('issue #11 api integration', () => {
       },
     });
     const approveJson = (await approveRes.json()) as {
-      data: { status: string; createdOrganizationId: string };
+      data: { status: string; approvedOrganizationId: string; approvalMode: string };
     };
     expect(approveJson.data.status).toBe('approved');
-    expect(approveJson.data.createdOrganizationId).toBe('org-new');
+    expect(approveJson.data.approvedOrganizationId).toBe('org-new');
+    expect(approveJson.data.approvalMode).toBe('create');
 
     enqueueDb(
       [
@@ -1250,7 +1264,9 @@ describe('issue #11 api integration', () => {
           requestedByEmail: 'member@example.com',
           reviewedByUserId: 'admin-user',
           reviewedAt: '2026-03-20T00:00:00.000Z',
-          createdOrganizationId: null,
+          approvalMode: null,
+          approvedOrganizationId: null,
+          approvedOrganizationName: null,
           createdInvitationId: null,
           adminNote: 'duplicate request',
           createdAt: '2026-03-20T00:00:00.000Z',
@@ -1276,6 +1292,152 @@ describe('issue #11 api integration', () => {
     expect(((await rejectRes.json()) as { data: { adminNote: string } }).data.adminNote).toBe(
       'duplicate request',
     );
+  });
+
+  it('approves a university request by attaching it to an existing organization', async () => {
+    const app = createApp();
+
+    enqueueDb(
+      [
+        {
+          id: '50000000-0000-4000-8000-000000000004',
+          requestedByUserId: 'member-user',
+          universityName: 'Requested University',
+          representativeEmail: 'owner@attach.example',
+          message: 'Attach this',
+          status: 'pending',
+        },
+      ],
+      [{ id: 'org-existing', name: 'Existing University' }],
+      [],
+      [],
+      [],
+      [{ total: 1 }],
+      [
+        {
+          id: '50000000-0000-4000-8000-000000000004',
+          universityName: 'Requested University',
+          representativeEmail: 'owner@attach.example',
+          message: 'Attach this',
+          status: 'approved',
+          requestedById: 'member-user',
+          requestedByName: 'member',
+          requestedByEmail: 'member@example.com',
+          reviewedByUserId: 'admin-user',
+          reviewedAt: '2026-03-20T00:00:00.000Z',
+          approvalMode: 'attach',
+          approvedOrganizationId: 'org-existing',
+          approvedOrganizationName: 'Existing University',
+          createdInvitationId: 'invite-existing',
+          adminNote: 'matched manually',
+          createdAt: '2026-03-20T00:00:00.000Z',
+          updatedAt: '2026-03-20T00:00:00.000Z',
+        },
+      ],
+      [{ id: 'admin-user', name: 'admin', email: 'admin@example.com' }],
+    );
+
+    const res = await app.request(
+      '/api/admin/university-requests/50000000-0000-4000-8000-000000000004/approve',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-role': 'admin',
+        },
+        body: JSON.stringify({
+          mode: 'attach',
+          organizationId: 'org-existing',
+          adminNote: 'matched manually',
+        }),
+      },
+    );
+
+    expect(res.status).toBe(200);
+    expect(mockSendEmail).toHaveBeenCalledWith({
+      to: 'owner@attach.example',
+      template: 'university-owner-invitation-link',
+      payload: {
+        universityName: 'Existing University',
+        invitationLink: expect.stringMatching(
+          /^http:\/\/localhost:3000\/invite\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+        ),
+      },
+    });
+    expect(
+      (await res.json()) as { data: { approvedOrganizationId: string; approvalMode: string } },
+    ).toEqual({
+      data: expect.objectContaining({
+        approvedOrganizationId: 'org-existing',
+        approvalMode: 'attach',
+      }),
+    });
+  });
+
+  it('returns 404 when attach approval targets a missing organization', async () => {
+    const app = createApp();
+
+    enqueueDb(
+      [
+        {
+          id: '50000000-0000-4000-8000-000000000005',
+          requestedByUserId: 'member-user',
+          universityName: 'Missing Target University',
+          representativeEmail: 'owner@missing.example',
+          message: 'Attach this',
+          status: 'pending',
+        },
+      ],
+      [],
+    );
+
+    const res = await app.request(
+      '/api/admin/university-requests/50000000-0000-4000-8000-000000000005/approve',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-role': 'admin',
+        },
+        body: JSON.stringify({
+          mode: 'attach',
+          organizationId: 'org-missing',
+        }),
+      },
+    );
+
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({ error: 'Not found' });
+  });
+
+  it('returns 409 when a university request is already reviewed', async () => {
+    const app = createApp();
+
+    enqueueDb([
+      {
+        id: '50000000-0000-4000-8000-000000000006',
+        requestedByUserId: 'member-user',
+        universityName: 'Reviewed University',
+        representativeEmail: 'owner@reviewed.example',
+        message: 'Reviewed already',
+        status: 'approved',
+      },
+    ]);
+
+    const res = await app.request(
+      '/api/admin/university-requests/50000000-0000-4000-8000-000000000006/approve',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-role': 'admin',
+        },
+        body: JSON.stringify({ mode: 'create' }),
+      },
+    );
+
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({ error: 'Already reviewed' });
   });
 
   it('creates and approves participation requests', async () => {

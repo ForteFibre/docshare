@@ -2630,7 +2630,10 @@ export interface paths {
                 } | null;
                 /** Format: date-time */
                 reviewedAt: string | null;
-                createdOrganizationId: string | null;
+                /** @enum {string|null} */
+                approvalMode: 'create' | 'attach' | null;
+                approvedOrganizationId: string | null;
+                approvedOrganizationName: string | null;
                 createdInvitationId: string | null;
                 adminNote: string | null;
                 /** Format: date-time */
@@ -2692,7 +2695,10 @@ export interface paths {
                 } | null;
                 /** Format: date-time */
                 reviewedAt: string | null;
-                createdOrganizationId: string | null;
+                /** @enum {string|null} */
+                approvalMode: 'create' | 'attach' | null;
+                approvedOrganizationId: string | null;
+                approvedOrganizationName: string | null;
                 createdInvitationId: string | null;
                 adminNote: string | null;
                 /** Format: date-time */
@@ -3884,7 +3890,10 @@ export interface paths {
                 } | null;
                 /** Format: date-time */
                 reviewedAt: string | null;
-                createdOrganizationId: string | null;
+                /** @enum {string|null} */
+                approvalMode: 'create' | 'attach' | null;
+                approvedOrganizationId: string | null;
+                approvedOrganizationName: string | null;
                 createdInvitationId: string | null;
                 adminNote: string | null;
                 /** Format: date-time */
@@ -3955,7 +3964,22 @@ export interface paths {
         };
         cookie?: never;
       };
-      requestBody?: never;
+      requestBody?: {
+        content: {
+          'application/json':
+            | {
+                /** @enum {string} */
+                mode: 'create';
+                adminNote?: string;
+              }
+            | {
+                /** @enum {string} */
+                mode: 'attach';
+                organizationId: string;
+                adminNote?: string;
+              };
+        };
+      };
       responses: {
         /** @description 大学追加依頼承認 */
         200: {
@@ -3987,7 +4011,10 @@ export interface paths {
                 } | null;
                 /** Format: date-time */
                 reviewedAt: string | null;
-                createdOrganizationId: string | null;
+                /** @enum {string|null} */
+                approvalMode: 'create' | 'attach' | null;
+                approvedOrganizationId: string | null;
+                approvedOrganizationName: string | null;
                 createdInvitationId: string | null;
                 adminNote: string | null;
                 /** Format: date-time */
@@ -3995,6 +4022,17 @@ export interface paths {
                 /** Format: date-time */
                 updatedAt: string;
               };
+            };
+          };
+        };
+        /** @description 不正入力 */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error?: unknown;
             };
           };
         };
@@ -4017,8 +4055,7 @@ export interface paths {
           };
           content: {
             'application/json': {
-              /** @enum {string} */
-              error: 'Already reviewed';
+              error: 'Already reviewed' | 'Pending invitation already exists';
             };
           };
         };
@@ -4086,7 +4123,10 @@ export interface paths {
                 } | null;
                 /** Format: date-time */
                 reviewedAt: string | null;
-                createdOrganizationId: string | null;
+                /** @enum {string|null} */
+                approvalMode: 'create' | 'attach' | null;
+                approvedOrganizationId: string | null;
+                approvedOrganizationName: string | null;
                 createdInvitationId: string | null;
                 adminNote: string | null;
                 /** Format: date-time */

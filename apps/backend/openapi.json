@@ -4482,7 +4482,16 @@
                             "nullable": true,
                             "format": "date-time"
                           },
-                          "createdOrganizationId": {
+                          "approvalMode": {
+                            "type": "string",
+                            "nullable": true,
+                            "enum": ["create", "attach", null]
+                          },
+                          "approvedOrganizationId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "approvedOrganizationName": {
                             "type": "string",
                             "nullable": true
                           },
@@ -4512,7 +4521,9 @@
                           "requestedBy",
                           "reviewedBy",
                           "reviewedAt",
-                          "createdOrganizationId",
+                          "approvalMode",
+                          "approvedOrganizationId",
+                          "approvedOrganizationName",
                           "createdInvitationId",
                           "adminNote",
                           "createdAt",
@@ -4620,7 +4631,16 @@
                           "nullable": true,
                           "format": "date-time"
                         },
-                        "createdOrganizationId": {
+                        "approvalMode": {
+                          "type": "string",
+                          "nullable": true,
+                          "enum": ["create", "attach", null]
+                        },
+                        "approvedOrganizationId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "approvedOrganizationName": {
                           "type": "string",
                           "nullable": true
                         },
@@ -4650,7 +4670,9 @@
                         "requestedBy",
                         "reviewedBy",
                         "reviewedAt",
-                        "createdOrganizationId",
+                        "approvalMode",
+                        "approvedOrganizationId",
+                        "approvedOrganizationName",
                         "createdInvitationId",
                         "adminNote",
                         "createdAt",
@@ -6636,7 +6658,16 @@
                             "nullable": true,
                             "format": "date-time"
                           },
-                          "createdOrganizationId": {
+                          "approvalMode": {
+                            "type": "string",
+                            "nullable": true,
+                            "enum": ["create", "attach", null]
+                          },
+                          "approvedOrganizationId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "approvedOrganizationName": {
                             "type": "string",
                             "nullable": true
                           },
@@ -6666,7 +6697,9 @@
                           "requestedBy",
                           "reviewedBy",
                           "reviewedAt",
-                          "createdOrganizationId",
+                          "approvalMode",
+                          "approvedOrganizationId",
+                          "approvedOrganizationName",
                           "createdInvitationId",
                           "adminNote",
                           "createdAt",
@@ -6759,6 +6792,46 @@
             "in": "path"
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mode": {
+                        "type": "string",
+                        "enum": ["create"]
+                      },
+                      "adminNote": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["mode"]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mode": {
+                        "type": "string",
+                        "enum": ["attach"]
+                      },
+                      "organizationId": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "adminNote": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["mode", "organizationId"]
+                  }
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "大学追加依頼承認",
@@ -6826,7 +6899,16 @@
                           "nullable": true,
                           "format": "date-time"
                         },
-                        "createdOrganizationId": {
+                        "approvalMode": {
+                          "type": "string",
+                          "nullable": true,
+                          "enum": ["create", "attach", null]
+                        },
+                        "approvedOrganizationId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "approvedOrganizationName": {
                           "type": "string",
                           "nullable": true
                         },
@@ -6856,7 +6938,9 @@
                         "requestedBy",
                         "reviewedBy",
                         "reviewedAt",
-                        "createdOrganizationId",
+                        "approvalMode",
+                        "approvedOrganizationId",
+                        "approvedOrganizationName",
                         "createdInvitationId",
                         "adminNote",
                         "createdAt",
@@ -6865,6 +6949,21 @@
                     }
                   },
                   "required": ["data"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "不正入力",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "nullable": true
+                    }
+                  }
                 }
               }
             }
@@ -6894,8 +6993,16 @@
                   "type": "object",
                   "properties": {
                     "error": {
-                      "type": "string",
-                      "enum": ["Already reviewed"]
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": ["Already reviewed"]
+                        },
+                        {
+                          "type": "string",
+                          "enum": ["Pending invitation already exists"]
+                        }
+                      ]
                     }
                   },
                   "required": ["error"]
@@ -7000,7 +7107,16 @@
                           "nullable": true,
                           "format": "date-time"
                         },
-                        "createdOrganizationId": {
+                        "approvalMode": {
+                          "type": "string",
+                          "nullable": true,
+                          "enum": ["create", "attach", null]
+                        },
+                        "approvedOrganizationId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "approvedOrganizationName": {
                           "type": "string",
                           "nullable": true
                         },
@@ -7030,7 +7146,9 @@
                         "requestedBy",
                         "reviewedBy",
                         "reviewedAt",
-                        "createdOrganizationId",
+                        "approvalMode",
+                        "approvedOrganizationId",
+                        "approvedOrganizationName",
                         "createdInvitationId",
                         "adminNote",
                         "createdAt",

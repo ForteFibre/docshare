@@ -129,6 +129,12 @@ export default function UniversityRequestPage() {
                     {REQUEST_STATUS_LABELS[request.status] ?? request.status}
                   </Badge>
                 </div>
+                {request.status === 'approved' && request.approvedOrganizationName ? (
+                  <p className='text-xs text-muted-foreground'>
+                    {request.approvalMode === 'attach' ? '既存大学へ追加' : '新規作成'}:{' '}
+                    {request.approvedOrganizationName}
+                  </p>
+                ) : null}
                 <p className='text-sm text-muted-foreground'>{request.representativeEmail}</p>
                 <p className='text-sm'>{request.message}</p>
                 <p className='text-xs text-muted-foreground'>

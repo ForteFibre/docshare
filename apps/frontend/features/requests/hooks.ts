@@ -44,6 +44,13 @@ type ParticipationRequestFormValues = {
   message: string;
 };
 
+export type ApproveUniversityRequestInput = {
+  id: string;
+  mode: 'create' | 'attach';
+  organizationId?: string;
+  adminNote?: string;
+};
+
 export function useUniversityRequestsSection() {
   const queryClient = useQueryClient();
 
@@ -200,9 +207,20 @@ export function useAdminRequestsPage() {
   });
 
   const approveUniversityMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, ...body }: ApproveUniversityRequestInput) => {
       const result = await apiClient.POST('/api/admin/university-requests/{id}/approve', {
         params: { path: { id } },
+        body:
+          body.mode === 'attach'
+            ? {
+                mode: 'attach',
+                organizationId: body.organizationId ?? '',
+                adminNote: body.adminNote,
+              }
+            : {
+                mode: 'create',
+                adminNote: body.adminNote,
+              },
       });
       return throwIfError(result);
     },
