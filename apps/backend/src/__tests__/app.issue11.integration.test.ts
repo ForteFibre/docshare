@@ -692,6 +692,61 @@ describe('issue #11 api integration', () => {
     expect(res.status).toBe(403);
   });
 
+  it('PUT /api/admin/users/:userId/admin updates isAdmin', async () => {
+    const app = createApp();
+
+    enqueueDb(
+      [{ id: 'u-1' }],
+      [
+        {
+          id: 'u-1',
+          name: 'Alice',
+          email: 'alice@example.com',
+          isAdmin: true,
+          createdAt: '2026-03-20T00:00:00.000Z',
+        },
+      ],
+    );
+    const promoteRes = await app.request('/api/admin/users/u-1/admin', {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json', 'x-role': 'admin' },
+      body: JSON.stringify({ isAdmin: true }),
+    });
+    expect(promoteRes.status).toBe(200);
+    expect(await promoteRes.json()).toEqual({
+      data: {
+        id: 'u-1',
+        name: 'Alice',
+        email: 'alice@example.com',
+        isAdmin: true,
+        createdAt: '2026-03-20T00:00:00.000Z',
+      },
+    });
+
+    const selfDemoteRes = await app.request('/api/admin/users/admin-user/admin', {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json', 'x-role': 'admin' },
+      body: JSON.stringify({ isAdmin: false }),
+    });
+    expect(selfDemoteRes.status).toBe(400);
+    expect(await selfDemoteRes.json()).toEqual({ error: 'Cannot demote self' });
+
+    enqueueDb([]);
+    const notFoundRes = await app.request('/api/admin/users/missing/admin', {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json', 'x-role': 'admin' },
+      body: JSON.stringify({ isAdmin: true }),
+    });
+    expect(notFoundRes.status).toBe(404);
+
+    const forbiddenRes = await app.request('/api/admin/users/u-1/admin', {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json', 'x-role': 'member' },
+      body: JSON.stringify({ isAdmin: true }),
+    });
+    expect(forbiddenRes.status).toBe(403);
+  });
+
   it('GET /api/editions/:id/submissions includes participation.universityName', async () => {
     const app = createApp();
 

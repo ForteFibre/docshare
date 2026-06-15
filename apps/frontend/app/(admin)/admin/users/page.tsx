@@ -19,6 +19,7 @@ import {
 import {
   type AdminUser,
   useAdminUsersPageState,
+  useCurrentUserId,
   useMembershipDialog,
 } from '@/features/admin/users/hooks';
 
@@ -157,7 +158,9 @@ export default function AdminUsersPage() {
     data,
     isLoading,
     sortOptions,
+    updateAdminMutation,
   } = useAdminUsersPageState();
+  const currentUserId = useCurrentUserId();
 
   const columns: ColumnDef<AdminUser>[] = [
     {
@@ -171,8 +174,43 @@ export default function AdminUsersPage() {
     },
     {
       header: '権限',
-      cell: ({ row }) =>
-        row.original.isAdmin ? <Badge>Admin</Badge> : <Badge variant='secondary'>User</Badge>,
+      cell: ({ row }) => {
+        const user = row.original;
+        const isSelf = currentUserId === user.id;
+        const nextIsAdmin = !user.isAdmin;
+        const pending =
+          updateAdminMutation.isPending && updateAdminMutation.variables?.userId === user.id;
+        return (
+          <div className='flex items-center gap-2'>
+            {user.isAdmin ? <Badge>Admin</Badge> : <Badge variant='secondary'>User</Badge>}
+            <ConfirmDialog
+              trigger={
+                <Button
+                  size='sm'
+                  variant='outline'
+                  disabled={pending || (isSelf && !nextIsAdmin)}
+                  title={
+                    isSelf && !nextIsAdmin ? '自分自身の Admin 権限は解除できません' : undefined
+                  }
+                >
+                  {user.isAdmin ? 'Admin を解除' : 'Admin に昇格'}
+                </Button>
+              }
+              title={user.isAdmin ? 'Admin 権限を解除しますか？' : 'Admin に昇格しますか？'}
+              description={
+                user.isAdmin
+                  ? `${user.name} の Admin 権限を解除します。`
+                  : `${user.name} を Admin に昇格します。`
+              }
+              confirmLabel={user.isAdmin ? '解除' : '昇格'}
+              onConfirm={() =>
+                updateAdminMutation.mutate({ userId: user.id, isAdmin: nextIsAdmin })
+              }
+              destructive={user.isAdmin}
+            />
+          </div>
+        );
+      },
     },
     {
       header: '所属数',

@@ -56,6 +56,18 @@ const updateMembershipRoleBodySchema = z.object({
   role: z.enum(['owner', 'member']),
 });
 
+const updateUserAdminBodySchema = z.object({
+  isAdmin: z.boolean(),
+});
+
+const updatedUserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string().email(),
+  isAdmin: z.boolean(),
+  createdAt: z.date(),
+});
+
 const isMemberUniqueViolation = (error: unknown): boolean => {
   if (typeof error !== 'object' || error === null) {
     return false;
@@ -217,6 +229,47 @@ const updateMembershipRoleRoute = createRoute({
       content: {
         'application/json': {
           schema: z.object({ error: z.literal('Last owner cannot be removed') }),
+        },
+      },
+    },
+  },
+});
+
+const updateUserAdminRoute = createRoute({
+  method: 'put',
+  path: '/users/{userId}/admin',
+  request: {
+    params: z.object({ userId: z.string() }),
+    body: {
+      content: {
+        'application/json': {
+          schema: updateUserAdminBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: '管理者権限更新',
+      content: {
+        'application/json': {
+          schema: z.object({ data: updatedUserSchema }),
+        },
+      },
+    },
+    400: {
+      description: '不正入力 / 自己降格',
+      content: {
+        'application/json': {
+          schema: z.object({ error: z.any() }),
+        },
+      },
+    },
+    404: {
+      description: 'ユーザー未検出',
+      content: {
+        'application/json': {
+          schema: z.object({ error: z.literal('Not found') }),
         },
       },
     },
@@ -424,6 +477,42 @@ adminUserRoutes.openapi(updateMembershipRoleRoute, async (c) => {
     .set({ role: body.data.role })
     .where(eq(members.id, memberId))
     .returning();
+
+  return c.json({ data: updated[0] }, 200);
+});
+
+adminUserRoutes.openapi(updateUserAdminRoute, async (c) => {
+  const userId = c.req.param('userId');
+  const body = updateUserAdminBodySchema.safeParse(await c.req.json());
+  if (!body.success) {
+    return c.json({ error: body.error.flatten() }, 400);
+  }
+
+  const currentUser = c.get('currentUser');
+  if (currentUser.id === userId && !body.data.isAdmin) {
+    return c.json({ error: 'Cannot demote self' as const }, 400);
+  }
+
+  const userRows = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (!userRows[0]) {
+    return c.json({ error: 'Not found' as const }, 404);
+  }
+
+  const updated = await db
+    .update(users)
+    .set({ isAdmin: body.data.isAdmin, updatedAt: new Date() })
+    .where(eq(users.id, userId))
+    .returning({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      isAdmin: users.isAdmin,
+      createdAt: users.createdAt,
+    });
 
   return c.json({ data: updated[0] }, 200);
 });
