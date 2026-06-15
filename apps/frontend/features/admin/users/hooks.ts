@@ -25,6 +25,18 @@ export type Membership = {
   createdAt: unknown;
 };
 
+export function useCurrentUserId(): string | undefined {
+  const { data } = useQuery({
+    queryKey: queryKeys.me,
+    queryFn: async () => {
+      const result = await apiClient.GET('/api/me');
+      return throwIfError(result);
+    },
+    staleTime: 60_000,
+  });
+  return data?.data.user.id;
+}
+
 export const listParsers = {
   page: parseAsInteger.withDefault(1),
   pageSize: parseAsInteger.withDefault(20),
@@ -33,6 +45,7 @@ export const listParsers = {
 };
 
 export function useAdminUsersPageState() {
+  const queryClient = useQueryClient();
   const [queryParams, setQueryParams] = useQueryStates(listParsers);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
@@ -72,6 +85,24 @@ export function useAdminUsersPageState() {
     [],
   );
 
+  const updateAdminMutation = useMutation({
+    mutationFn: async ({ userId, isAdmin }: { userId: string; isAdmin: boolean }) => {
+      const result = await apiClient.PUT('/api/admin/users/{userId}/admin', {
+        params: { path: { userId } },
+        body: { isAdmin },
+      });
+      return throwIfError(result);
+    },
+    onSuccess: async (_data, variables) => {
+      toast.success(variables.isAdmin ? 'Admin に昇格しました' : 'Admin 権限を解除しました');
+      await invalidateAdminUsersQueries(queryClient);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.me });
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error));
+    },
+  });
+
   return {
     queryParams,
     setQueryParams,
@@ -82,6 +113,7 @@ export function useAdminUsersPageState() {
     data,
     isLoading,
     sortOptions,
+    updateAdminMutation,
   };
 }
 

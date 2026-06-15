@@ -5211,6 +5211,82 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/admin/users/{userId}/admin': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          userId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          'application/json': {
+            isAdmin: boolean;
+          };
+        };
+      };
+      responses: {
+        /** @description 管理者権限更新 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              data: {
+                id: string;
+                name: string;
+                /** Format: email */
+                email: string;
+                isAdmin: boolean;
+                /** Format: date-time */
+                createdAt: string;
+              };
+            };
+          };
+        };
+        /** @description 不正入力 / 自己降格 */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error?: unknown;
+            };
+          };
+        };
+        /** @description ユーザー未検出 */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {string} */
+              error: 'Not found';
+            };
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/admin/memberships/{memberId}': {
     parameters: {
       query?: never;
