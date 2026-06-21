@@ -38,7 +38,7 @@ const matrixSortLabelMap: Record<(typeof matrixSortValues)[number], string> = {
 
 const paginationParsers = {
   page: parseAsInteger.withDefault(1),
-  pageSize: parseAsInteger.withDefault(20),
+  pageSize: parseAsInteger.withDefault(100),
   q: parseAsString.withDefault(''),
   sort: parseAsStringEnum([...matrixSortValues]).withDefault('createdAt:asc'),
 };

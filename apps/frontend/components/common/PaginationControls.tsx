@@ -24,7 +24,7 @@ interface PaginationControlsProps {
   onPageSizeChange: (pageSize: number) => void;
 }
 
-const PAGE_SIZE_OPTIONS = [10, 20, 50];
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 export function PaginationControls({
   pagination,
