@@ -4,14 +4,13 @@ import { and, asc, count, desc, eq, inArray, isNull } from 'drizzle-orm';
 import { db } from '../../db/index.js';
 import {
   competitionEditions,
-  invitations,
+  members,
   organizations,
   participationRequests,
   participations,
   universityCreationRequests,
   users,
 } from '../../db/schema.js';
-import { buildInvitationLink } from '../../lib/invitation-link.js';
 import {
   createPaginatedResponseSchema,
   createPaginationMeta,
@@ -20,6 +19,10 @@ import {
 } from '../../lib/pagination.js';
 import type { AppVariables } from '../../middleware/auth.js';
 import { emailService } from '../../services/email/index.js';
+import {
+  issueVerificationCode,
+  VERIFICATION_CODE_TTL_MS,
+} from '../../services/university-owner-verification.js';
 
 const requestStatusSchema = z.enum(['pending', 'approved', 'rejected']);
 
@@ -68,6 +71,7 @@ const universityRequestSchema = z.object({
   approvedOrganizationId: z.string().nullable(),
   approvedOrganizationName: z.string().nullable(),
   createdInvitationId: z.string().nullable(),
+  verifiedAt: z.date().nullable(),
   adminNote: z.string().nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -185,10 +189,7 @@ const approveUniversityRequestRoute = createRoute({
       content: {
         'application/json': {
           schema: z.object({
-            error: z.union([
-              z.literal('Already reviewed'),
-              z.literal('Pending invitation already exists'),
-            ]),
+            error: z.union([z.literal('Already reviewed'), z.literal('User already a member')]),
           }),
         },
       },
@@ -442,6 +443,7 @@ const listUniversityRequestDetails = async ({
       approvedOrganizationId: universityCreationRequests.approvedOrganizationId,
       approvedOrganizationName: organizations.name,
       createdInvitationId: universityCreationRequests.createdInvitationId,
+      verifiedAt: universityCreationRequests.verifiedAt,
       adminNote: universityCreationRequests.adminNote,
       createdAt: universityCreationRequests.createdAt,
       updatedAt: universityCreationRequests.updatedAt,
@@ -480,6 +482,7 @@ const listUniversityRequestDetails = async ({
       approvedOrganizationId: row.approvedOrganizationId,
       approvedOrganizationName: row.approvedOrganizationName,
       createdInvitationId: row.createdInvitationId,
+      verifiedAt: row.verifiedAt,
       adminNote: row.adminNote,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
@@ -653,9 +656,7 @@ adminRequestRoutes.openapi(approveUniversityRequestRoute, async (c) => {
   }
 
   const organizationId = body.data.mode === 'attach' ? body.data.organizationId : randomUUID();
-  let invitationUniversityName = request.universityName;
-  const invitationId = randomUUID();
-  const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);
+  let organizationName = request.universityName;
 
   if (body.data.mode === 'create') {
     const slug = await getUniqueUniversitySlug(request.universityName);
@@ -676,43 +677,33 @@ adminRequestRoutes.openapi(approveUniversityRequestRoute, async (c) => {
       return c.json({ error: 'Not found' as const }, 404);
     }
 
-    invitationUniversityName = approvedOrganization.name;
+    organizationName = approvedOrganization.name;
 
-    const pendingInvitationRows = await db
-      .select({ id: invitations.id })
-      .from(invitations)
-      .where(
-        and(
-          eq(invitations.organizationId, organizationId),
-          eq(invitations.email, requesterUser.email),
-          eq(invitations.role, 'owner'),
-          eq(invitations.status, 'pending'),
-        ),
-      )
+    const existingMemberRows = await db
+      .select({ id: members.id })
+      .from(members)
+      .where(and(eq(members.organizationId, organizationId), eq(members.userId, requesterUser.id)))
       .limit(1);
 
-    if (pendingInvitationRows[0]) {
-      return c.json({ error: 'Pending invitation already exists' as const }, 409);
+    if (existingMemberRows[0]) {
+      return c.json({ error: 'User already a member' as const }, 409);
     }
   }
 
-  // 招待状を発行して代表にメール送信、ただし承認は申請元が行う形式
-  await db.insert(invitations).values({
-    id: invitationId,
+  const { code } = await issueVerificationCode({
+    requestId,
     organizationId,
-    email: requesterUser.email,
-    role: 'owner',
-    inviterId: user.id,
-    expiresAt,
+    targetUserId: requesterUser.id,
   });
 
   await emailService.sendEmail({
     to: request.representativeEmail,
-    template: 'university-owner-invitation-link',
+    template: 'university-owner-verification-code',
     payload: {
-      universityName: invitationUniversityName,
-      invitationLink: buildInvitationLink(invitationId),
+      universityName: organizationName,
+      code,
       requestedByEmail: requesterUser.email,
+      expiresInMinutes: Math.floor(VERIFICATION_CODE_TTL_MS / 60_000),
     },
   });
 
@@ -724,7 +715,6 @@ adminRequestRoutes.openapi(approveUniversityRequestRoute, async (c) => {
       reviewedAt: new Date(),
       approvalMode: body.data.mode,
       approvedOrganizationId: organizationId,
-      createdInvitationId: invitationId,
       adminNote: body.data.adminNote ?? null,
       updatedAt: new Date(),
     })

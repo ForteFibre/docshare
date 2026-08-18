@@ -334,6 +334,7 @@ export const universityCreationRequests = pgTable(
     createdInvitationId: text('created_invitation_id').references(() => invitations.id, {
       onDelete: 'set null',
     }),
+    verifiedAt: timestamp('verified_at', { withTimezone: true }),
     adminNote: text('admin_note'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -345,6 +346,42 @@ export const universityCreationRequests = pgTable(
     statusCreatedAtIdx: index('university_creation_request_status_created_at_idx').on(
       table.status,
       table.createdAt,
+    ),
+  }),
+);
+
+export const universityOwnerVerifications = pgTable(
+  'university_owner_verification',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    requestId: uuid('request_id')
+      .notNull()
+      .references(() => universityCreationRequests.id, { onDelete: 'cascade' }),
+    organizationId: text('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    targetUserId: text('target_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    codeHash: text('code_hash').notNull(),
+    attemptsRemaining: integer('attempts_remaining').notNull().default(3),
+    status: text('status')
+      .$type<'active' | 'consumed' | 'invalidated' | 'expired'>()
+      .notNull()
+      .default('active'),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    consumedAt: timestamp('consumed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    requestCreatedIdx: index('university_owner_verification_request_created_idx').on(
+      table.requestId,
+      table.createdAt,
+    ),
+    requestStatusIdx: index('university_owner_verification_request_status_idx').on(
+      table.requestId,
+      table.status,
     ),
   }),
 );
