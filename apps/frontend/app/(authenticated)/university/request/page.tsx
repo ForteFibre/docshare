@@ -140,6 +140,21 @@ export default function UniversityRequestPage() {
                 <p className='text-xs text-muted-foreground'>
                   申請日時: <DateTimeDisplay value={request.createdAt} />
                 </p>
+                {request.status === 'approved' && !request.verifiedAt ? (
+                  <div className='pt-2'>
+                    <Button
+                      size='sm'
+                      render={<Link href={`/university/request/${request.id}/verify`} />}
+                    >
+                      代表アドレスに送信されたコードで確認する
+                    </Button>
+                  </div>
+                ) : null}
+                {request.verifiedAt ? (
+                  <p className='text-xs text-emerald-600'>
+                    所属確認済み: <DateTimeDisplay value={request.verifiedAt} />
+                  </p>
+                ) : null}
               </CardContent>
             </Card>
           ))

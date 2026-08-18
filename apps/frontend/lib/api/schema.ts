@@ -2635,6 +2635,8 @@ export interface paths {
                 approvedOrganizationId: string | null;
                 approvedOrganizationName: string | null;
                 createdInvitationId: string | null;
+                /** Format: date-time */
+                verifiedAt: string | null;
                 adminNote: string | null;
                 /** Format: date-time */
                 createdAt: string;
@@ -2700,6 +2702,8 @@ export interface paths {
                 approvedOrganizationId: string | null;
                 approvedOrganizationName: string | null;
                 createdInvitationId: string | null;
+                /** Format: date-time */
+                verifiedAt: string | null;
                 adminNote: string | null;
                 /** Format: date-time */
                 createdAt: string;
@@ -2717,6 +2721,339 @@ export interface paths {
           content: {
             'application/json': {
               error?: unknown;
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/university-requests/{id}/verification': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 所属確認コード状態 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              data: {
+                /** Format: uuid */
+                requestId: string;
+                active: boolean;
+                attemptsRemaining: number | null;
+                /** Format: date-time */
+                expiresAt: string | null;
+                /** Format: date-time */
+                createdAt: string | null;
+                /** Format: date-time */
+                verifiedAt: string | null;
+              };
+            };
+          };
+        };
+        /** @description 申請者本人のみ利用可能 */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {string} */
+              error: 'Forbidden';
+            };
+          };
+        };
+        /** @description 対象未検出 */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {string} */
+              error: 'Not found';
+            };
+          };
+        };
+        /** @description 未承認 */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {string} */
+              error: 'Not approved';
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/university-requests/{id}/verify': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          'application/json': {
+            code: string;
+          };
+        };
+      };
+      responses: {
+        /** @description 所属確認完了 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              data: {
+                /** Format: uuid */
+                id: string;
+                universityName: string;
+                /** Format: email */
+                representativeEmail: string;
+                message: string;
+                /** @enum {string} */
+                status: 'pending' | 'approved' | 'rejected';
+                requestedBy: {
+                  id: string;
+                  name: string;
+                  /** Format: email */
+                  email: string;
+                };
+                reviewedBy: {
+                  id: string;
+                  name: string;
+                  /** Format: email */
+                  email: string;
+                } | null;
+                /** Format: date-time */
+                reviewedAt: string | null;
+                /** @enum {string|null} */
+                approvalMode: 'create' | 'attach' | null;
+                approvedOrganizationId: string | null;
+                approvedOrganizationName: string | null;
+                createdInvitationId: string | null;
+                /** Format: date-time */
+                verifiedAt: string | null;
+                adminNote: string | null;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+              };
+            };
+          };
+        };
+        /** @description 不正入力 */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error?: unknown;
+            };
+          };
+        };
+        /** @description 申請者本人のみ利用可能 */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {string} */
+              error: 'Forbidden';
+            };
+          };
+        };
+        /** @description 対象未検出 */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {string} */
+              error: 'Not found';
+            };
+          };
+        };
+        /** @description 状態が処理不可 */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: 'Not approved' | 'Already verified' | 'No active code';
+            };
+          };
+        };
+        /** @description コード期限切れ */
+        410: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {string} */
+              error: 'Code expired';
+            };
+          };
+        };
+        /** @description コード不一致 */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: 'Code mismatch' | 'Attempts exhausted';
+              attemptsRemaining?: number;
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/university-requests/{id}/resend-code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description 確認コード再送 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              data: {
+                /** Format: uuid */
+                requestId: string;
+                active: boolean;
+                attemptsRemaining: number | null;
+                /** Format: date-time */
+                expiresAt: string | null;
+                /** Format: date-time */
+                createdAt: string | null;
+                /** Format: date-time */
+                verifiedAt: string | null;
+              };
+            };
+          };
+        };
+        /** @description 申請者本人のみ利用可能 */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {string} */
+              error: 'Forbidden';
+            };
+          };
+        };
+        /** @description 対象未検出 */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @enum {string} */
+              error: 'Not found';
+            };
+          };
+        };
+        /** @description 状態が処理不可 */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: 'Not approved' | 'Already verified';
+            };
+          };
+        };
+        /** @description 再送制限 */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: 'Cooldown' | 'Hourly limit';
+              retryAfterMs: number;
             };
           };
         };
@@ -3895,6 +4232,8 @@ export interface paths {
                 approvedOrganizationId: string | null;
                 approvedOrganizationName: string | null;
                 createdInvitationId: string | null;
+                /** Format: date-time */
+                verifiedAt: string | null;
                 adminNote: string | null;
                 /** Format: date-time */
                 createdAt: string;
@@ -4016,6 +4355,8 @@ export interface paths {
                 approvedOrganizationId: string | null;
                 approvedOrganizationName: string | null;
                 createdInvitationId: string | null;
+                /** Format: date-time */
+                verifiedAt: string | null;
                 adminNote: string | null;
                 /** Format: date-time */
                 createdAt: string;
@@ -4055,7 +4396,7 @@ export interface paths {
           };
           content: {
             'application/json': {
-              error: 'Already reviewed' | 'Pending invitation already exists';
+              error: 'Already reviewed' | 'User already a member';
             };
           };
         };
@@ -4128,6 +4469,8 @@ export interface paths {
                 approvedOrganizationId: string | null;
                 approvedOrganizationName: string | null;
                 createdInvitationId: string | null;
+                /** Format: date-time */
+                verifiedAt: string | null;
                 adminNote: string | null;
                 /** Format: date-time */
                 createdAt: string;
