@@ -4499,6 +4499,11 @@
                             "type": "string",
                             "nullable": true
                           },
+                          "verifiedAt": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "date-time"
+                          },
                           "adminNote": {
                             "type": "string",
                             "nullable": true
@@ -4525,6 +4530,7 @@
                           "approvedOrganizationId",
                           "approvedOrganizationName",
                           "createdInvitationId",
+                          "verifiedAt",
                           "adminNote",
                           "createdAt",
                           "updatedAt"
@@ -4648,6 +4654,11 @@
                           "type": "string",
                           "nullable": true
                         },
+                        "verifiedAt": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        },
                         "adminNote": {
                           "type": "string",
                           "nullable": true
@@ -4674,6 +4685,7 @@
                         "approvedOrganizationId",
                         "approvedOrganizationName",
                         "createdInvitationId",
+                        "verifiedAt",
                         "adminNote",
                         "createdAt",
                         "updatedAt"
@@ -4696,6 +4708,566 @@
                       "nullable": true
                     }
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/university-requests/{id}/verification": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "所属確認コード状態",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "requestId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "active": {
+                          "type": "boolean"
+                        },
+                        "attemptsRemaining": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "expiresAt": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        },
+                        "verifiedAt": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "requestId",
+                        "active",
+                        "attemptsRemaining",
+                        "expiresAt",
+                        "createdAt",
+                        "verifiedAt"
+                      ]
+                    }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "申請者本人のみ利用可能",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": ["Forbidden"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "対象未検出",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": ["Not found"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "未承認",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": ["Not approved"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/university-requests/{id}/verify": {
+      "post": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 6,
+                    "pattern": "^\\d{6}$"
+                  }
+                },
+                "required": ["code"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "所属確認完了",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "universityName": {
+                          "type": "string"
+                        },
+                        "representativeEmail": {
+                          "type": "string",
+                          "format": "email"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": ["pending", "approved", "rejected"]
+                        },
+                        "requestedBy": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string",
+                              "format": "email"
+                            }
+                          },
+                          "required": ["id", "name", "email"]
+                        },
+                        "reviewedBy": {
+                          "type": "object",
+                          "nullable": true,
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string",
+                              "format": "email"
+                            }
+                          },
+                          "required": ["id", "name", "email"]
+                        },
+                        "reviewedAt": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        },
+                        "approvalMode": {
+                          "type": "string",
+                          "nullable": true,
+                          "enum": ["create", "attach", null]
+                        },
+                        "approvedOrganizationId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "approvedOrganizationName": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "createdInvitationId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "verifiedAt": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        },
+                        "adminNote": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "universityName",
+                        "representativeEmail",
+                        "message",
+                        "status",
+                        "requestedBy",
+                        "reviewedBy",
+                        "reviewedAt",
+                        "approvalMode",
+                        "approvedOrganizationId",
+                        "approvedOrganizationName",
+                        "createdInvitationId",
+                        "verifiedAt",
+                        "adminNote",
+                        "createdAt",
+                        "updatedAt"
+                      ]
+                    }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "不正入力",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "申請者本人のみ利用可能",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": ["Forbidden"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "対象未検出",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": ["Not found"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "状態が処理不可",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": ["Not approved"]
+                        },
+                        {
+                          "type": "string",
+                          "enum": ["Already verified"]
+                        },
+                        {
+                          "type": "string",
+                          "enum": ["No active code"]
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "コード期限切れ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": ["Code expired"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "コード不一致",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": ["Code mismatch"]
+                        },
+                        {
+                          "type": "string",
+                          "enum": ["Attempts exhausted"]
+                        }
+                      ]
+                    },
+                    "attemptsRemaining": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/university-requests/{id}/resend-code": {
+      "post": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "確認コード再送",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "requestId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "active": {
+                          "type": "boolean"
+                        },
+                        "attemptsRemaining": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "expiresAt": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        },
+                        "verifiedAt": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "requestId",
+                        "active",
+                        "attemptsRemaining",
+                        "expiresAt",
+                        "createdAt",
+                        "verifiedAt"
+                      ]
+                    }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "申請者本人のみ利用可能",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": ["Forbidden"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "対象未検出",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": ["Not found"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "状態が処理不可",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": ["Not approved"]
+                        },
+                        {
+                          "type": "string",
+                          "enum": ["Already verified"]
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "再送制限",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": ["Cooldown"]
+                        },
+                        {
+                          "type": "string",
+                          "enum": ["Hourly limit"]
+                        }
+                      ]
+                    },
+                    "retryAfterMs": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": ["error", "retryAfterMs"]
                 }
               }
             }
@@ -6675,6 +7247,11 @@
                             "type": "string",
                             "nullable": true
                           },
+                          "verifiedAt": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "date-time"
+                          },
                           "adminNote": {
                             "type": "string",
                             "nullable": true
@@ -6701,6 +7278,7 @@
                           "approvedOrganizationId",
                           "approvedOrganizationName",
                           "createdInvitationId",
+                          "verifiedAt",
                           "adminNote",
                           "createdAt",
                           "updatedAt"
@@ -6916,6 +7494,11 @@
                           "type": "string",
                           "nullable": true
                         },
+                        "verifiedAt": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        },
                         "adminNote": {
                           "type": "string",
                           "nullable": true
@@ -6942,6 +7525,7 @@
                         "approvedOrganizationId",
                         "approvedOrganizationName",
                         "createdInvitationId",
+                        "verifiedAt",
                         "adminNote",
                         "createdAt",
                         "updatedAt"
@@ -7000,7 +7584,7 @@
                         },
                         {
                           "type": "string",
-                          "enum": ["Pending invitation already exists"]
+                          "enum": ["User already a member"]
                         }
                       ]
                     }
@@ -7124,6 +7708,11 @@
                           "type": "string",
                           "nullable": true
                         },
+                        "verifiedAt": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        },
                         "adminNote": {
                           "type": "string",
                           "nullable": true
@@ -7150,6 +7739,7 @@
                         "approvedOrganizationId",
                         "approvedOrganizationName",
                         "createdInvitationId",
+                        "verifiedAt",
                         "adminNote",
                         "createdAt",
                         "updatedAt"

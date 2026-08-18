@@ -140,6 +140,23 @@ const emailTemplateDefinitions: {
         },
       }),
   },
+  'university-owner-verification-code': {
+    render: (payload) =>
+      renderEmail({
+        subject: `${payload.universityName} の所属確認コード`,
+        heading: `${payload.universityName} の所属確認コード`,
+        body: [
+          `DocShare で ${payload.universityName} の代表者アカウントを設定するための確認コードをお送りします。`,
+          `この申請は ${payload.requestedByEmail} のアカウントから送信されています。`,
+          `申請元 (${payload.requestedByEmail}) が DocShare にログインした状態で、以下の確認コードを入力してください。`,
+          `コードの有効期限は発行から ${payload.expiresInMinutes} 分です。`,
+        ],
+        detail: {
+          label: '確認コード',
+          value: payload.code,
+        },
+      }),
+  },
   'participation-request-approved': {
     render: (payload) =>
       renderEmail({
