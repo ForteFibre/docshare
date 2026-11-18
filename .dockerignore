@@ -27,7 +27,7 @@ yarn-error.log*
 
 apps/*/pnpm-lock.yaml
 apps/*/pnpm-workspace.yaml
-*.tsbuildinfo
+**/*.tsbuildinfo
 next-env.d.ts
 
 migration_source/
