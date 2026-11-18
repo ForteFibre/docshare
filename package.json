@@ -1,7 +1,7 @@
 {
   "name": "fortefibre-docshare-2",
   "private": true,
-  "packageManager": "pnpm@10.0.0",
+  "packageManager": "pnpm@12.22.0",
   "scripts": {
     "dev": "dotenv -- pnpm --filter \"./apps/*\" dev",
     "dev:frontend": "dotenv -- pnpm --filter \"./apps/frontend\" dev",
