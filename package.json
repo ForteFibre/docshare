@@ -20,7 +20,7 @@
     "@biomejs/biome": "^2.4.9",
     "@types/node": "^26.6.6",
     "typescript": "^7.0.2",
-    "vitest": "^4.1.2"
+    "vitest": "^5.1.0"
   },
   "dependencies": {
     "dotenv-cli": "^11.0.0"
