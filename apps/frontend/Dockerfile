@@ -1,4 +1,4 @@
-FROM node:22-slim AS base
+FROM node:26-slim AS base
 
 WORKDIR /app
 ENV PNPM_HOME="/pnpm"
@@ -17,7 +17,7 @@ ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN pnpm --filter frontend build
 
-FROM node:22-slim AS runner
+FROM node:26-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
