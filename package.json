@@ -23,6 +23,6 @@
     "vitest": "^5.1.0"
   },
   "dependencies": {
-    "dotenv-cli": "^11.0.0"
+    "dotenv-cli": "^11.1.0"
   }
 }
