@@ -18,7 +18,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1166.0",
     "@aws-sdk/s3-request-presigner": "^3.1166.0",
-    "@hono/node-server": "^1.13.8",
+    "@hono/node-server": "^2.1.6",
     "@hono/swagger-ui": "^0.6.2",
     "@hono/zod-openapi": "^1.6.3",
     "@sendgrid/mail": "^8.1.5",
