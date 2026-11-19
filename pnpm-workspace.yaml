@@ -1,3 +1,11 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# 依存パッケージのビルドスクリプト実行可否（pnpm 12 では未記載のものがあると install がエラーになる）
+# いずれもビルドスクリプトなしで動作するため実行しない
+allowBuilds:
+  esbuild: false
+  msw: false
+  sharp: false
+  unrs-resolver: false
