@@ -1239,6 +1239,7 @@ describe('issue #11 api integration', () => {
       [],
       [],
       [],
+      [{ id: 'verify-new' }],
       [],
       [{ total: 1 }],
       [
@@ -1256,7 +1257,8 @@ describe('issue #11 api integration', () => {
           approvalMode: 'create',
           approvedOrganizationId: 'org-new',
           approvedOrganizationName: 'Approve University',
-          createdInvitationId: 'invite-new',
+          createdInvitationId: null,
+          verifiedAt: null,
           adminNote: null,
           createdAt: '2026-03-20T00:00:00.000Z',
           updatedAt: '2026-03-20T00:00:00.000Z',
@@ -1280,13 +1282,12 @@ describe('issue #11 api integration', () => {
     expect(approveRes.status).toBe(200);
     expect(mockSendEmail).toHaveBeenCalledWith({
       to: 'owner@approve.example',
-      template: 'university-owner-invitation-link',
+      template: 'university-owner-verification-code',
       payload: {
         universityName: 'Approve University',
-        invitationLink: expect.stringMatching(
-          /^http:\/\/localhost:3000\/invite\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
-        ),
+        code: expect.stringMatching(/^\d{6}$/),
         requestedByEmail: 'member@example.com',
+        expiresInMinutes: 10,
       },
     });
     const approveJson = (await approveRes.json()) as {
@@ -1369,6 +1370,7 @@ describe('issue #11 api integration', () => {
       [{ id: 'org-existing', name: 'Existing University' }],
       [],
       [],
+      [{ id: 'verify-existing' }],
       [],
       [{ total: 1 }],
       [
@@ -1386,7 +1388,8 @@ describe('issue #11 api integration', () => {
           approvalMode: 'attach',
           approvedOrganizationId: 'org-existing',
           approvedOrganizationName: 'Existing University',
-          createdInvitationId: 'invite-existing',
+          createdInvitationId: null,
+          verifiedAt: null,
           adminNote: 'matched manually',
           createdAt: '2026-03-20T00:00:00.000Z',
           updatedAt: '2026-03-20T00:00:00.000Z',
@@ -1414,13 +1417,12 @@ describe('issue #11 api integration', () => {
     expect(res.status).toBe(200);
     expect(mockSendEmail).toHaveBeenCalledWith({
       to: 'owner@attach.example',
-      template: 'university-owner-invitation-link',
+      template: 'university-owner-verification-code',
       payload: {
         universityName: 'Existing University',
-        invitationLink: expect.stringMatching(
-          /^http:\/\/localhost:3000\/invite\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
-        ),
+        code: expect.stringMatching(/^\d{6}$/),
         requestedByEmail: 'member@example.com',
+        expiresInMinutes: 10,
       },
     });
     expect(

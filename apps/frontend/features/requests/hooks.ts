@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { parseAsInteger, useQueryStates } from 'nuqs';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { useInvalidateMe } from '@/contexts/AuthContext';
 import { apiClient, throwIfError } from '@/lib/api/client';
 import type { paths } from '@/lib/api/schema';
 import {
@@ -50,6 +51,70 @@ export type ApproveUniversityRequestInput = {
   organizationId?: string;
   adminNote?: string;
 };
+
+export type UniversityVerificationStatus =
+  paths['/api/university-requests/{id}/verification']['get']['responses'][200]['content']['application/json']['data'];
+
+export function useUniversityVerification(requestId: string) {
+  const queryClient = useQueryClient();
+  const invalidateMe = useInvalidateMe();
+
+  const statusQuery = useQuery({
+    queryKey: queryKeys.requests.universityVerification(requestId),
+    queryFn: async () => {
+      const result = await apiClient.GET('/api/university-requests/{id}/verification', {
+        params: { path: { id: requestId } },
+      });
+      return throwIfError(result);
+    },
+    refetchOnWindowFocus: false,
+  });
+
+  const verifyMutation = useMutation({
+    mutationFn: async (code: string) => {
+      const result = await apiClient.POST('/api/university-requests/{id}/verify', {
+        params: { path: { id: requestId } },
+        body: { code },
+      });
+      return throwIfError(result);
+    },
+    onSuccess: async () => {
+      toast.success('所属確認が完了しました');
+      await Promise.all([
+        invalidateUniversityRequestQueries(queryClient),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.requests.universityVerification(requestId),
+        }),
+        invalidateMe(),
+      ]);
+    },
+    onError: (err) => toast.error(getApiErrorMessage(err)),
+  });
+
+  const resendMutation = useMutation({
+    mutationFn: async () => {
+      const result = await apiClient.POST('/api/university-requests/{id}/resend-code', {
+        params: { path: { id: requestId } },
+      });
+      return throwIfError(result);
+    },
+    onSuccess: async () => {
+      toast.success('確認コードを再送しました');
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.requests.universityVerification(requestId),
+      });
+    },
+    onError: (err) => toast.error(getApiErrorMessage(err)),
+  });
+
+  return {
+    status: statusQuery.data?.data ?? null,
+    isLoading: statusQuery.isLoading,
+    error: statusQuery.error,
+    verifyMutation,
+    resendMutation,
+  };
+}
 
 export function useUniversityRequestsSection() {
   const queryClient = useQueryClient();

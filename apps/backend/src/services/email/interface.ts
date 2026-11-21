@@ -13,6 +13,12 @@ export type EmailTemplateMap = {
     invitationLink: string;
     requestedByEmail: string;
   };
+  'university-owner-verification-code': {
+    universityName: string;
+    code: string;
+    requestedByEmail: string;
+    expiresInMinutes: number;
+  };
   'participation-request-approved': {
     editionName: string;
     universityName: string;
