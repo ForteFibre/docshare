@@ -1,4 +1,4 @@
-FROM ghcr.io/pnpm/pnpm:12.22.0 AS pnpm
+FROM ghcr.io/pnpm/pnpm:12.23.0 AS pnpm
 
 FROM node:26-slim AS base
 
